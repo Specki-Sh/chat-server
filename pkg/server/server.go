@@ -47,16 +47,19 @@ func (s *Server) Shutdown(ctx context.Context) error {
 // Я не уверен, что это должно быть здесь
 func (s *Server) setupRouter() {
 	// auth
-	s.route.POST("/sign-up", s.authHandler.SignUp)
-	s.route.POST("/sign-in", s.authHandler.SignIn)
-	s.route.GET("/logout", s.authHandler.Logout)
+	auth := s.route.Group("/auth")
+	auth.POST("/sign-up", s.authHandler.SignUp)
+	auth.POST("/sign-in", s.authHandler.SignIn)
+	auth.GET("/logout", s.authHandler.Logout)
 
 	// room
-	s.route.POST("/rooms", s.roomHandler.PostRoom)
-	s.route.GET("/rooms/:id", s.roomHandler.GetRoom)
-	s.route.PATCH("/rooms/info", s.roomHandler.PatchRoomInfo)
-	s.route.POST("/rooms/:id", s.roomHandler.DeleteRoom)
+	room := s.route.Group("/rooms")
+	room.POST("/", s.roomHandler.PostRoom)
+	room.GET("/:id", s.roomHandler.GetRoom)
+	room.PATCH("/info", s.roomHandler.PatchRoomInfo)
+	room.POST("/:id", s.roomHandler.DeleteRoom)
 
 	// ws
-	s.route.GET("/ws/joinRoom/:id", s.chatHandler.JoinRoom)
+	ws := s.route.Group("/ws")
+	ws.GET("/ws/joinRoom/:id", s.chatHandler.JoinRoom)
 }
