@@ -15,3 +15,12 @@ type RoomRepository interface {
 	UpdateRoom(room *entity.Room) error
 	DeleteRoom(id int) error
 }
+
+type MessageRepository interface {
+	InsertMessage(message *entity.Message) (*entity.Message, error)
+	SelectMessage(id int) (*entity.Message, error)
+	UpdateMessage(message *entity.Message) error
+	DeleteMessage(id int) error
+
+	SelectMessagePaginate(perPage int, page int) ([]*entity.Message, error)
+}
