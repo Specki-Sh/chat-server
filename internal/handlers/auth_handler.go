@@ -2,18 +2,23 @@ package handlers
 
 import (
 	entity2 "chat-server/internal/domain/entity"
-	use_case2 "chat-server/internal/domain/use_case"
-	"net/http"
-
+	"chat-server/internal/domain/use_case"
+	"errors"
 	"github.com/gin-gonic/gin"
+	"net/http"
+)
+
+const (
+	userCtx     = "userId"
+	usernameCtx = "username"
 )
 
 type AuthHandler struct {
-	userUseCase use_case2.UserUseCase
-	authUseCase use_case2.AuthUseCase
+	userUseCase use_case.UserUseCase
+	authUseCase use_case.AuthUseCase
 }
 
-func NewAuthHandler(uus use_case2.UserUseCase, aus use_case2.AuthUseCase) *AuthHandler {
+func NewAuthHandler(uus use_case.UserUseCase, aus use_case.AuthUseCase) *AuthHandler {
 	return &AuthHandler{userUseCase: uus, authUseCase: aus}
 }
 
@@ -53,4 +58,54 @@ func (a *AuthHandler) SignIn(c *gin.Context) {
 func (a *AuthHandler) Logout(c *gin.Context) {
 	c.SetCookie("jwt", "", -1, "", "", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "logout successful"})
+}
+
+func (a *AuthHandler) UserIdentity(c *gin.Context) {
+	cookie, err := c.Cookie("jwt")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"reason": "no jwt cookie"})
+		return
+	}
+
+	if len(cookie) == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"reason": "token is empty"})
+		return
+	}
+
+	userId, username, err := a.authUseCase.ParseToken(cookie)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"reason": err.Error()})
+		return
+	}
+
+	c.Set(userCtx, userId)
+	c.Set(usernameCtx, username)
+}
+
+func GetUserId(c *gin.Context) (int, error) {
+	id, ok := c.Get(userCtx)
+	if !ok {
+		return 0, errors.New("user id not found")
+	}
+
+	idInt, ok := id.(int)
+	if !ok {
+		return 0, errors.New("user id is of invalid type")
+	}
+
+	return idInt, nil
+}
+
+func GetUsername(c *gin.Context) (string, error) {
+	name, ok := c.Get(usernameCtx)
+	if !ok {
+		return "", errors.New("username not found")
+	}
+
+	nameString, ok := name.(string)
+	if !ok {
+		return "", errors.New("username is of invalid type")
+	}
+
+	return nameString, nil
 }
