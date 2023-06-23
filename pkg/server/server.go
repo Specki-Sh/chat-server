@@ -8,11 +8,14 @@ import (
 	"time"
 )
 
-func NewServer(authHandler *handlers.AuthHandler) *Server {
+func NewServer(authHandler *handlers.AuthHandler, roomHandler *handlers.RoomHandler, chatHandler *handlers.ChatHandler) *Server {
 	return &Server{
 		httpServer:  &http.Server{},
 		route:       gin.New(),
-		authHandler: authHandler}
+		authHandler: authHandler,
+		roomHandler: roomHandler,
+		chatHandler: chatHandler,
+	}
 }
 
 type Server struct {
@@ -20,6 +23,8 @@ type Server struct {
 	route      *gin.Engine
 
 	authHandler *handlers.AuthHandler
+	roomHandler *handlers.RoomHandler
+	chatHandler *handlers.ChatHandler
 }
 
 func (s *Server) Run(port string) error {
@@ -41,7 +46,17 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 // Я не уверен, что это должно быть здесь
 func (s *Server) setupRouter() {
+	// auth
 	s.route.POST("/sign-up", s.authHandler.SignUp)
 	s.route.POST("/sign-in", s.authHandler.SignIn)
 	s.route.GET("/logout", s.authHandler.Logout)
+
+	// room
+	s.route.POST("/rooms", s.roomHandler.PostRoom)
+	s.route.GET("/rooms/:id", s.roomHandler.GetRoom)
+	s.route.PATCH("/rooms/info", s.roomHandler.PatchRoomInfo)
+	s.route.POST("/rooms/:id", s.roomHandler.DeleteRoom)
+
+	// ws
+	s.route.GET("/ws/joinRoom/:id", s.chatHandler.JoinRoom)
 }
