@@ -27,14 +27,17 @@ func Run() {
 	defer db.CloseDbConnection()
 
 	userRep := repository.NewUserRepository(db.GetDBConn())
+	roomRep := repository.NewRoomRepository(db.GetDBConn())
 	userSvc := service.NewUserService(userRep)
+	roomSvc := service.NewRoomService(roomRep)
 	authSvc := service.NewAuthService(userSvc)
 
 	authHandler := handlers.NewAuthHandler(userSvc, authSvc)
-
+	roomHandler := handlers.NewRoomHandler(roomSvc)
+	chatHandler := handlers.NewChatHandler()
 	httpPort := "8000"
 
-	srv := server.NewServer(authHandler)
+	srv := server.NewServer(authHandler, roomHandler, chatHandler)
 	go func() {
 		if err := srv.Run(httpPort); err != nil {
 			log.Fatalf("Error occured while running http server: %s", err.Error())
