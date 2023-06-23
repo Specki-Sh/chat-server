@@ -1,0 +1,5 @@
+migrateup:
+	migrate -path pkg/db/migrations -database "postgres://postgres:password@localhost:5432/newdb?sslmode=disable" up
+
+migratedown:
+	migrate -path pkg/db/migrations -database "postgres://postgres:password@localhost:5432/newdb?sslmode=disable" down

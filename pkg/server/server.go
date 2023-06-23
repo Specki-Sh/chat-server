@@ -52,11 +52,11 @@ func (s *Server) setupRouter() {
 	s.route.GET("/logout", s.authHandler.Logout)
 
 	// room
-	s.route.POST("/rooms", s.roomHandler.PostRoom)
-	s.route.GET("/rooms/:id", s.roomHandler.GetRoom)
-	s.route.PATCH("/rooms/info", s.roomHandler.PatchRoomInfo)
-	s.route.POST("/rooms/:id", s.roomHandler.DeleteRoom)
+	s.route.POST("/rooms", s.authHandler.UserIdentity, s.roomHandler.PostRoom)
+	s.route.GET("/rooms/:id", s.authHandler.UserIdentity, s.roomHandler.GetRoom)
+	s.route.PATCH("/rooms/info", s.authHandler.UserIdentity, s.roomHandler.PatchRoomInfo)
+	s.route.POST("/rooms/:id", s.authHandler.UserIdentity, s.roomHandler.DeleteRoom)
 
 	// ws
-	s.route.GET("/ws/joinRoom/:id", s.chatHandler.JoinRoom)
+	s.route.GET("/ws/joinRoom/:id", s.authHandler.UserIdentity, s.chatHandler.JoinRoom)
 }
