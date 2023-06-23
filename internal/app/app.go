@@ -12,17 +12,22 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/spf13/viper"
 )
 
 func Run() {
-	config := db.Config{
-		Host:     "localhost",
-		Port:     "5432",
-		Username: "postgres",
-		Password: "password",
-		DBName:   "mydb",
-		SSLMode:  "disable",
+	// yaml
+	if err := initConfig(); err != nil {
+		log.Fatalf("Error occured while init viper configs: %s", err.Error())
+		return
 	}
+	var config db.Config
+	if err := viper.UnmarshalKey("db", &config); err != nil {
+		log.Fatalf("Error unmarshaling configs: %s", err)
+	}
+	config.Password = os.Getenv("DB_PASSWORD")
+
 	db.StartDbConnection(config)
 	defer db.CloseDbConnection()
 
@@ -35,7 +40,7 @@ func Run() {
 	authHandler := handlers.NewAuthHandler(userSvc, authSvc)
 	roomHandler := handlers.NewRoomHandler(roomSvc)
 	chatHandler := handlers.NewChatHandler()
-	httpPort := "8000"
+	httpPort := viper.GetString("port")
 
 	srv := server.NewServer(authHandler, roomHandler, chatHandler)
 	go func() {
@@ -55,4 +60,10 @@ func Run() {
 	if err := srv.Shutdown(context.Background()); err != nil {
 		log.Fatalf("error occurred on server shutting down: %s", err.Error())
 	}
+}
+
+func initConfig() error {
+	viper.AddConfigPath("configs")
+	viper.SetConfigName("config")
+	return viper.ReadInConfig()
 }
