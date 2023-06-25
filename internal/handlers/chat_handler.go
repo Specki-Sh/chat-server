@@ -45,10 +45,14 @@ func (h *ChatHandler) JoinRoom(c *gin.Context) {
 
 	go cl.WriteMessage()
 
-	broadcast := make(chan *entity.Message, h.broadcastBuffSize)
-	go cl.ReadMessage(broadcast)
-	h.broadcastManager(broadcast)
+	go h.startBroadcastManager(id)
+	cl.ReadMessage(h.chats[id].Broadcast)
+}
 
+func (h *ChatHandler) startBroadcastManager(roomID int) {
+	if chat, ok := h.chats[roomID]; ok && !chat.BroadcastManagerStatus {
+		h.broadcastManager(chat.Broadcast)
+	}
 }
 
 func (h *ChatHandler) broadcastManager(broadcast chan *entity.Message) {
@@ -70,9 +74,7 @@ func (h *ChatHandler) addClient(roomID int, c *service.Client) {
 
 	chat, ok := h.chats[roomID]
 	if !ok {
-		chat = &service.Chat{
-			Clients: make(map[*service.Client]struct{}),
-		}
+		chat = service.NewChat(h.broadcastBuffSize)
 		h.chats[roomID] = chat
 	}
 
@@ -82,5 +84,8 @@ func (h *ChatHandler) addClient(roomID int, c *service.Client) {
 func (h *ChatHandler) deleteClient(roomId int, c *service.Client) {
 	h.chatsMu.Lock()
 	delete(h.chats[roomId].Clients, c)
+	if len(h.chats[roomId].Clients) == 0 {
+		delete(h.chats, roomId)
+	}
 	h.chatsMu.Unlock()
 }
