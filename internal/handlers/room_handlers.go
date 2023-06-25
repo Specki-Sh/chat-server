@@ -25,6 +25,12 @@ func (h *RoomHandler) PostRoom(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	id, err := getUserId(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	req.OwnerId = id
 
 	res, err := h.roomUseCase.CreateRoom(&req)
 	if err != nil {
@@ -83,7 +89,7 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (h *RoomHandler) RoomExistsMiddleware(paramKey string) gin.HandlerFunc {
+func (h *RoomHandler) RoomExistsMiddlewareByParam(paramKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roomID, err := strconv.Atoi(c.Param(paramKey))
 		if err != nil {
@@ -91,6 +97,31 @@ func (h *RoomHandler) RoomExistsMiddleware(paramKey string) gin.HandlerFunc {
 			return
 		}
 		exists, err := h.roomUseCase.RoomExists(roomID)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if !exists {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		c.Next()
+	}
+}
+
+func (h *RoomHandler) RoomExistsMiddlewareByJSON(jsonKey string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var jsonInput map[string]interface{}
+		if err := c.ShouldBindJSON(&jsonInput); err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		roomID, ok := jsonInput[jsonKey].(float64)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid room ID"})
+			return
+		}
+		exists, err := h.roomUseCase.RoomExists(int(roomID))
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
