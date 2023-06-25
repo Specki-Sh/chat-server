@@ -6,12 +6,14 @@ import (
 )
 
 type RoomService struct {
-	roomRepo use_case.RoomRepository
+	roomRepo   use_case.RoomRepository
+	memberRepo use_case.MemberRepository
 }
 
-func NewRoomService(roomRepo use_case.RoomRepository) *RoomService {
+func NewRoomService(roomRepo use_case.RoomRepository, memberRepo use_case.MemberRepository) *RoomService {
 	return &RoomService{
-		roomRepo: roomRepo,
+		roomRepo:   roomRepo,
+		memberRepo: memberRepo,
 	}
 }
 
@@ -72,4 +74,17 @@ func (s *RoomService) IsRoomOwner(roomID int, userID int) (bool, error) {
 		return false, err
 	}
 	return room.OwnerID == userID, nil
+}
+
+func (s *RoomService) HasRoomAccess(roomID int, userID int) (bool, error) {
+	members, err := s.memberRepo.SelectMembersByRoomID(roomID)
+	if err != nil {
+		return false, err
+	}
+	for _, member := range members {
+		if member.UserID == userID {
+			return true, nil
+		}
+	}
+	return false, nil
 }

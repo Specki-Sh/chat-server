@@ -159,3 +159,29 @@ func (h *RoomHandler) RoomPermissionsMiddleware(c *gin.Context) {
 
 	c.Next()
 }
+
+func (h *RoomHandler) RoomAccessMiddleware(c *gin.Context) {
+	roomID, err := strconv.Atoi(c.Param("roomID"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid room ID"})
+		return
+	}
+
+	userID, err := getUserId(c)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	hasAccess, err := h.roomUseCase.HasRoomAccess(roomID, userID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if !hasAccess {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "access denied"})
+		return
+	}
+
+	c.Next()
+}

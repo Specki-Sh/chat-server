@@ -30,4 +30,5 @@ type RoomUseCase interface {
 	RemoveRoomByID(id int) error
 	RoomExists(id int) (bool, error)
 	IsRoomOwner(roomID int, userID int) (bool, error)
+	HasRoomAccess(roomID int, userID int) (bool, error)
 }
