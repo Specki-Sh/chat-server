@@ -34,7 +34,7 @@ func (s *RoomService) CreateRoom(req *use_case.CreateRoomReq) (*use_case.CreateR
 }
 
 func (s *RoomService) GetRoomByID(id int) (*entity.Room, error) {
-	return s.roomRepo.SelectRoom(id)
+	return s.roomRepo.SelectRoomByID(id)
 }
 
 func (s *RoomService) EditRoomInfo(req *use_case.EditRoomReq) (*use_case.EditRoomRes, error) {
@@ -56,4 +56,12 @@ func (s *RoomService) EditRoomInfo(req *use_case.EditRoomReq) (*use_case.EditRoo
 
 func (s *RoomService) RemoveRoomByID(id int) error {
 	return s.roomRepo.DeleteRoom(id)
+}
+
+func (s *RoomService) RoomExists(id int) (bool, error) {
+	_, err := s.roomRepo.SelectRoomByID(id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }

@@ -28,4 +28,5 @@ type RoomUseCase interface {
 	GetRoomByID(id int) (*entity.Room, error)
 	EditRoomInfo(req *EditRoomReq) (*EditRoomRes, error)
 	RemoveRoomByID(id int) error
+	RoomExists(id int) (bool, error)
 }

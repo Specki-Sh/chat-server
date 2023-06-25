@@ -82,3 +82,23 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 
 	c.Status(http.StatusNoContent)
 }
+
+func (h *RoomHandler) RoomExistsMiddleware(paramKey string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roomID, err := strconv.Atoi(c.Param(paramKey))
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		exists, err := h.roomUseCase.RoomExists(roomID)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if !exists {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		c.Next()
+	}
+}
