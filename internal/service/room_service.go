@@ -65,3 +65,11 @@ func (s *RoomService) RoomExists(id int) (bool, error) {
 	}
 	return true, nil
 }
+
+func (s *RoomService) IsRoomOwner(roomID int, userID int) (bool, error) {
+	room, err := s.roomRepo.SelectRoomByID(roomID)
+	if err != nil {
+		return false, err
+	}
+	return room.OwnerID == userID, nil
+}

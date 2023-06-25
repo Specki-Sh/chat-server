@@ -29,4 +29,5 @@ type RoomUseCase interface {
 	EditRoomInfo(req *EditRoomReq) (*EditRoomRes, error)
 	RemoveRoomByID(id int) error
 	RoomExists(id int) (bool, error)
+	IsRoomOwner(roomID int, userID int) (bool, error)
 }
