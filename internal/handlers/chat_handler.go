@@ -14,6 +14,9 @@ import (
 type ChatHandler struct {
 	chatsMu sync.Mutex
 	chats   map[int]*service.Chat
+
+	messageBuffSize   int
+	broadcastBuffSize int
 }
 
 func NewChatHandler() *ChatHandler {
@@ -36,17 +39,13 @@ func (h *ChatHandler) JoinRoom(c *gin.Context) {
 	}
 	defer conn.Close(websocket.StatusInternalError, "")
 
-	cl := &service.Client{
-		Conn:    conn,
-		Message: make(chan *entity.Message, 10),
-		RoomID:  id,
-	}
+	cl := service.NewClient(conn, h.messageBuffSize, id)
 	h.addClient(id, cl)
 	defer h.deleteClient(id, cl)
 
 	go cl.WriteMessage()
 
-	broadcast := make(chan *entity.Message, 10)
+	broadcast := make(chan *entity.Message, h.broadcastBuffSize)
 	go cl.ReadMessage(broadcast)
 	h.broadcastManager(broadcast)
 
