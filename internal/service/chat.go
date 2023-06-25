@@ -18,6 +18,14 @@ type Client struct {
 	RoomID  int
 }
 
+func NewClient(conn *websocket.Conn, messageBuffSize int, roomID int) *Client {
+	return &Client{
+		Conn:    conn,
+		Message: make(chan *entity.Message, messageBuffSize),
+		RoomID:  roomID,
+	}
+}
+
 func (c *Client) WriteMessage() {
 	for {
 		message, ok := <-c.Message
