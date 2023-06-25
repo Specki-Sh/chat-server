@@ -9,7 +9,18 @@ import (
 )
 
 type Chat struct {
-	Clients map[*Client]struct{}
+	Broadcast              chan *entity.Message
+	BroadcastManagerStatus bool
+	Clients                map[*Client]struct{}
+}
+
+func NewChat(bcBuffSize int) *Chat {
+	return &Chat{
+		Broadcast: make(chan *entity.Message, bcBuffSize),
+		Clients:   make(map[*Client]struct{}),
+
+		BroadcastManagerStatus: false,
+	}
 }
 
 type Client struct {
