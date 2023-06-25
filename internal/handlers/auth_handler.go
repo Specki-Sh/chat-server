@@ -3,7 +3,6 @@ package handlers
 import (
 	entity2 "chat-server/internal/domain/entity"
 	"chat-server/internal/domain/use_case"
-	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
@@ -80,32 +79,4 @@ func (a *AuthHandler) UserIdentity(c *gin.Context) {
 
 	c.Set(userCtx, userId)
 	c.Set(usernameCtx, username)
-}
-
-func GetUserId(c *gin.Context) (int, error) {
-	id, ok := c.Get(userCtx)
-	if !ok {
-		return 0, errors.New("user id not found")
-	}
-
-	idInt, ok := id.(int)
-	if !ok {
-		return 0, errors.New("user id is of invalid type")
-	}
-
-	return idInt, nil
-}
-
-func GetUsername(c *gin.Context) (string, error) {
-	name, ok := c.Get(usernameCtx)
-	if !ok {
-		return "", errors.New("username not found")
-	}
-
-	nameString, ok := name.(string)
-	if !ok {
-		return "", errors.New("username is of invalid type")
-	}
-
-	return nameString, nil
 }
