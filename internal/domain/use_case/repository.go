@@ -11,7 +11,7 @@ type UserRepository interface {
 
 type RoomRepository interface {
 	InsertRoom(room *entity.Room) (*entity.Room, error)
-	SelectRoom(id int) (*entity.Room, error)
+	SelectRoomByID(id int) (*entity.Room, error)
 	UpdateRoom(room *entity.Room) error
 	DeleteRoom(id int) error
 }

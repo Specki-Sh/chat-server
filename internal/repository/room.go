@@ -25,7 +25,7 @@ func (r *RoomRepository) InsertRoom(room *entity.Room) (*entity.Room, error) {
 	return room, nil
 }
 
-func (r *RoomRepository) SelectRoom(id int) (*entity.Room, error) {
+func (r *RoomRepository) SelectRoomByID(id int) (*entity.Room, error) {
 	query := "SELECT id, owner_id, name FROM rooms WHERE id = $1"
 	row := r.db.QueryRow(query, id)
 
