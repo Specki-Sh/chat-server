@@ -63,18 +63,18 @@ func (a *AuthHandler) Logout(c *gin.Context) {
 func (a *AuthHandler) UserIdentity(c *gin.Context) {
 	cookie, err := c.Cookie("jwt")
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"reason": "no jwt cookie"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"reason": "no jwt cookie"})
 		return
 	}
 
 	if len(cookie) == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"reason": "token is empty"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"reason": "token is empty"})
 		return
 	}
 
 	userId, username, err := a.authUseCase.ParseToken(cookie)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"reason": err.Error()})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"reason": err.Error()})
 		return
 	}
 

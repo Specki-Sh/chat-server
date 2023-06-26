@@ -27,13 +27,15 @@ type Client struct {
 	Conn    *websocket.Conn
 	Message chan *entity.Message
 	RoomID  int
+	UserID  int
 }
 
-func NewClient(conn *websocket.Conn, messageBuffSize int, roomID int) *Client {
+func NewClient(conn *websocket.Conn, messageBuffSize int, roomID int, userID int) *Client {
 	return &Client{
 		Conn:    conn,
 		Message: make(chan *entity.Message, messageBuffSize),
 		RoomID:  roomID,
+		UserID:  userID,
 	}
 }
 
@@ -67,8 +69,9 @@ func (c *Client) ReadMessage(broadcast chan *entity.Message) {
 		}
 
 		msg := &entity.Message{
-			RoomID:  c.RoomID,
-			Content: string(m),
+			RoomID:   c.RoomID,
+			SenderID: c.UserID,
+			Content:  string(m),
 		}
 
 		broadcast <- msg

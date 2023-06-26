@@ -47,7 +47,7 @@ func (r *MessageRepository) SoftDeleteMessageByID(id int) error {
 	return err
 }
 
-func (r *MessageRepository) SoftDeleteMessageByRoomID(roomID int) error {
+func (r *MessageRepository) SoftDeleteMessagesByRoomID(roomID int) error {
 	query := `UPDATE messages SET is_active = false, deleted_at = CURRENT_TIMESTAMP WHERE room_id = $1`
 	_, err := r.db.Exec(query, roomID)
 	return err

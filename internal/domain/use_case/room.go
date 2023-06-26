@@ -25,7 +25,7 @@ type EditRoomRes struct {
 
 type RoomUseCase interface {
 	CreateRoom(req *CreateRoomReq) (*CreateRoomRes, error)
-	GetRoomByID(id int) (*entity.Room, error)
+	GetRoomInfoByID(id int) (*entity.Room, error)
 	EditRoomInfo(req *EditRoomReq) (*EditRoomRes, error)
 	RemoveRoomByID(id int) error
 	RoomExists(id int) (bool, error)

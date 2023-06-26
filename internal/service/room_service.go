@@ -35,7 +35,7 @@ func (s *RoomService) CreateRoom(req *use_case.CreateRoomReq) (*use_case.CreateR
 	return &res, nil
 }
 
-func (s *RoomService) GetRoomByID(id int) (*entity.Room, error) {
+func (s *RoomService) GetRoomInfoByID(id int) (*entity.Room, error) {
 	return s.roomRepo.SelectRoomByID(id)
 }
 

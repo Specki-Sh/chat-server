@@ -22,15 +22,22 @@ type ChatHandler struct {
 	broadcastBuffSize int
 }
 
-func NewChatHandler() *ChatHandler {
+func NewChatHandler(messageUseCase use_case.MessageUseCase) *ChatHandler {
 	return &ChatHandler{
-		chats: make(map[int]*service.Chat),
+		messageUseCase: messageUseCase,
+		chats:          make(map[int]*service.Chat),
 	}
 }
 
 func (h *ChatHandler) JoinRoom(c *gin.Context) {
 	// Get the chat ID from the "id" URL parameter.
-	id, err := strconv.Atoi(c.Param("id"))
+	roomID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userID, err := strconv.Atoi(c.Query("userID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -45,18 +52,18 @@ func (h *ChatHandler) JoinRoom(c *gin.Context) {
 	defer conn.Close(websocket.StatusInternalError, "")
 
 	// Create a new client and add it to the chat.
-	cl := service.NewClient(conn, h.messageBuffSize, id)
-	h.addClient(id, cl)
-	defer h.deleteClient(id, cl)
+	cl := service.NewClient(conn, h.messageBuffSize, roomID, userID)
+	h.addClient(roomID, cl)
+	defer h.deleteClient(roomID, cl)
 
 	// Start a go-routine to send messages to the client.
 	go cl.WriteMessage()
 
 	// Start the broadcast manager for the chat (if it is not already started).
-	go h.startBroadcastManager(id)
+	go h.startBroadcastManager(roomID)
 
 	// Read messages from the client and send them to the chat's broadcast channel.
-	cl.ReadMessage(h.chats[id].Broadcast)
+	cl.ReadMessage(h.chats[roomID].Broadcast)
 }
 
 func (h *ChatHandler) EditMessage(c *gin.Context) {

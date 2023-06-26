@@ -33,13 +33,16 @@ func Run() {
 
 	userRep := repository.NewUserRepository(db.GetDBConn())
 	roomRep := repository.NewRoomRepository(db.GetDBConn())
+	memberRep := repository.NewMemberRepository(db.GetDBConn())
+	msgRep := repository.NewMessageRepository(db.GetDBConn())
 	userSvc := service.NewUserService(userRep)
-	roomSvc := service.NewRoomService(roomRep)
+	roomSvc := service.NewRoomService(roomRep, memberRep)
 	authSvc := service.NewAuthService(userSvc)
+	messageSvc := service.NewMessageService(msgRep)
 
 	authHandler := handlers.NewAuthHandler(userSvc, authSvc)
 	roomHandler := handlers.NewRoomHandler(roomSvc)
-	chatHandler := handlers.NewChatHandler()
+	chatHandler := handlers.NewChatHandler(messageSvc)
 	httpPort := viper.GetString("port")
 
 	srv := server.NewServer(authHandler, roomHandler, chatHandler)
