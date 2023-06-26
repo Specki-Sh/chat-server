@@ -59,12 +59,8 @@ func (h *ChatHandler) JoinRoom(c *gin.Context) {
 	cl.ReadMessage(h.chats[id].Broadcast)
 }
 
-type EditMessageReq struct {
-	Content string `json:"content"`
-}
-
 func (h *ChatHandler) EditMessage(c *gin.Context) {
-	var req EditMessageReq
+	var req use_case.EditMessageReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -74,11 +70,8 @@ func (h *ChatHandler) EditMessage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
-	editReq := &use_case.EditMessageReq{
-		ID:      id,
-		Content: req.Content,
-	}
-	message, err := h.messageUseCase.EditMessageContent(editReq)
+	req.ID = id
+	message, err := h.messageUseCase.EditMessageContent(&req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -106,6 +99,13 @@ func (h *ChatHandler) GetMessagesPaginate(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	roomID, err := strconv.Atoi(c.Param("roomID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		return
+	}
+	req.RoomID = roomID
+
 	messages, err := h.messageUseCase.GetMessagesPaginate(&req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

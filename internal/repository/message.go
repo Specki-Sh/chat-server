@@ -47,11 +47,11 @@ func (r *MessageRepository) SoftDeleteMessage(id int) error {
 	return err
 }
 
-func (r *MessageRepository) SelectMessagePaginate(perPage int, page int) ([]*entity.Message, error) {
+func (r *MessageRepository) SelectMessagePaginate(roomID int, perPage int, page int) ([]*entity.Message, error) {
 	var messages []*entity.Message
 	offset := perPage * (page - 1)
-	query := `SELECT id, sender_id, room_id, content, status, created_at FROM messages WHERE is_active = true LIMIT $1 OFFSET $2`
-	rows, err := r.db.Query(query, perPage, offset)
+	query := `SELECT id, sender_id, room_id, content, status, created_at FROM messages WHERE is_active = true AND room_id = $1 LIMIT $2 OFFSET $3`
+	rows, err := r.db.Query(query, roomID, perPage, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -71,11 +71,11 @@ func (r *MessageRepository) SelectMessagePaginate(perPage int, page int) ([]*ent
 	return messages, nil
 }
 
-func (r *MessageRepository) SelectMessagesPaginateReverse(perPage int, page int) ([]*entity.Message, error) {
+func (r *MessageRepository) SelectMessagesPaginateReverse(roomID int, perPage int, page int) ([]*entity.Message, error) {
 	var messages []*entity.Message
 	offset := (page - 1) * perPage
-	query := `SELECT id, sender_id, room_id, content, status, created_at FROM messages WHERE is_active = true ORDER BY created_at DESC LIMIT $1 OFFSET $2`
-	rows, err := r.db.Query(query, perPage, offset)
+	query := `SELECT id,sender_id,room_id,content,status,created_at FROM messages WHERE is_active = true AND room_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	rows, err := r.db.Query(query, roomID, perPage, offset)
 	if err != nil {
 		return nil, err
 	}

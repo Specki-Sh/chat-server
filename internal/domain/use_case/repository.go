@@ -22,8 +22,8 @@ type MessageRepository interface {
 	UpdateMessage(message *entity.Message) error
 	SoftDeleteMessage(id int) error
 
-	SelectMessagePaginate(perPage int, page int) ([]*entity.Message, error)
-	SelectMessagesPaginateReverse(perPage int, page int) ([]*entity.Message, error)
+	SelectMessagePaginate(roomID int, perPage int, page int) ([]*entity.Message, error)
+	SelectMessagesPaginateReverse(roomID int, perPage int, page int) ([]*entity.Message, error)
 }
 
 type MemberRepository interface {

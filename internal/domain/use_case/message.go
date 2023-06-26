@@ -24,6 +24,7 @@ type EditMessageReq struct {
 }
 
 type GetMessagesPaginateReq struct {
+	RoomID  int `json:"room_id"`
 	PerPage int `json:"per_page"`
 	Page    int `json:"page"`
 }
