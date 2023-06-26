@@ -157,6 +157,25 @@ func (h *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.Ha
 	}
 }
 
+func (h *ChatHandler) BroadcastMessageUpdateMiddleware(c *gin.Context) {
+	messageID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid message ID"})
+		return
+	}
+
+	c.Next()
+	if c.IsAborted() {
+		return
+	}
+
+	msg, err := h.messageUseCase.GetMessageByID(messageID)
+	if err != nil {
+		return
+	}
+	h.sendMessageForAllClientInRoom(msg)
+}
+
 // startBroadcastManager starts the broadcast manager for the chat with the specified ID (if it is not already started).
 func (h *ChatHandler) startBroadcastManager(roomID int) {
 	if chat, ok := h.chats[roomID]; ok && !chat.BroadcastManagerStatus {
@@ -175,11 +194,15 @@ func (h *ChatHandler) broadcastManager(broadcast chan *entity.Message) {
 				// log
 				continue
 			}
-			if chat, ok := h.chats[message.RoomID]; ok {
-				for cl := range chat.Clients {
-					cl.Message <- message
-				}
-			}
+			h.sendMessageForAllClientInRoom(message)
+		}
+	}
+}
+
+func (h *ChatHandler) sendMessageForAllClientInRoom(msg *entity.Message) {
+	if chat, ok := h.chats[msg.RoomID]; ok {
+		for cl := range chat.Clients {
+			cl.Message <- msg
 		}
 	}
 }
