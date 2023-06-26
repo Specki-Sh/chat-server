@@ -3,6 +3,7 @@ package app
 import (
 	"chat-server/internal/handlers"
 	"chat-server/internal/repository"
+	"chat-server/internal/route"
 	"chat-server/internal/service"
 	"chat-server/pkg/db"
 	"chat-server/pkg/server"
@@ -43,11 +44,12 @@ func Run() {
 	authHandler := handlers.NewAuthHandler(userSvc, authSvc)
 	roomHandler := handlers.NewRoomHandler(roomSvc)
 	chatHandler := handlers.NewChatHandler(messageSvc)
+	router := route.NewRouter(authHandler, roomHandler, chatHandler)
 	httpPort := viper.GetString("port")
 
-	srv := server.NewServer(authHandler, roomHandler, chatHandler)
+	srv := new(server.Server)
 	go func() {
-		if err := srv.Run(httpPort); err != nil {
+		if err := srv.Run(httpPort, router.SetupRouter()); err != nil {
 			log.Fatalf("Error occured while running http server: %s", err.Error())
 			return
 		}
