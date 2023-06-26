@@ -9,6 +9,6 @@ CREATE TABLE messages (
     deleted_at TIMESTAMP,
     is_active BOOLEAN DEFAULT True,
     CHECK (status IN ('sent', 'read')),
-    FOREIGN KEY (sender_id) REFERENCES users(id),
-    FOREIGN KEY (room_id) REFERENCES rooms(id)
+    FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE CASCADE
 );
