@@ -25,10 +25,10 @@ func (r *MessageRepository) InsertMessage(message *entity.Message) (*entity.Mess
 }
 
 func (r *MessageRepository) SelectMessage(id int) (*entity.Message, error) {
-	query := `SELECT id, sender_id, room_id, content, status, created_at FROM messages WHERE id = $1 AND is_active = true`
+	query := `SELECT id, sender_id, room_id, content, status, created_at, updated_at, deleted_at FROM messages WHERE id = $1 AND is_active = true`
 	message := &entity.Message{}
 	err := r.db.QueryRow(query, id).Scan(&message.ID, &message.SenderID, &message.RoomID,
-		&message.Content, &message.Status, &message.CreatedAt)
+		&message.Content, &message.Status, &message.CreatedAt, &message.UpdatedAt, &message.DeletedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (r *MessageRepository) SoftDeleteMessagesByRoomID(roomID int) error {
 func (r *MessageRepository) SelectMessagePaginate(roomID int, perPage int, page int) ([]*entity.Message, error) {
 	var messages []*entity.Message
 	offset := perPage * (page - 1)
-	query := `SELECT id, sender_id, room_id, content, status, created_at FROM messages WHERE is_active = true AND room_id = $1 LIMIT $2 OFFSET $3`
+	query := `SELECT id, sender_id, room_id, content, status, created_at, updated_at, deleted_at FROM messages WHERE is_active = true AND room_id = $1 LIMIT $2 OFFSET $3`
 	rows, err := r.db.Query(query, roomID, perPage, offset)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (r *MessageRepository) SelectMessagePaginate(roomID int, perPage int, page 
 	defer rows.Close()
 	for rows.Next() {
 		message := &entity.Message{}
-		err = rows.Scan(&message.ID, &message.SenderID, &message.RoomID, &message.Content, &message.Status, &message.CreatedAt)
+		err = rows.Scan(&message.ID, &message.SenderID, &message.RoomID, &message.Content, &message.Status, &message.CreatedAt, &message.UpdatedAt, &message.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +80,7 @@ func (r *MessageRepository) SelectMessagePaginate(roomID int, perPage int, page 
 func (r *MessageRepository) SelectMessagesPaginateReverse(roomID int, perPage int, page int) ([]*entity.Message, error) {
 	var messages []*entity.Message
 	offset := (page - 1) * perPage
-	query := `SELECT id,sender_id,room_id,content,status,created_at FROM messages WHERE is_active = true AND room_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	query := `SELECT id, sender_id, room_id, content, status, created_at, updated_at, deleted_at FROM messages WHERE is_active = true AND room_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 	rows, err := r.db.Query(query, roomID, perPage, offset)
 	if err != nil {
 		return nil, err
@@ -88,7 +88,7 @@ func (r *MessageRepository) SelectMessagesPaginateReverse(roomID int, perPage in
 	defer rows.Close()
 	for rows.Next() {
 		var message entity.Message
-		err = rows.Scan(&message.ID, &message.SenderID, &message.RoomID, &message.Content, &message.Status, &message.CreatedAt)
+		err = rows.Scan(&message.ID, &message.SenderID, &message.RoomID, &message.Content, &message.Status, &message.CreatedAt, &message.UpdatedAt, &message.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
