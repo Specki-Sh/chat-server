@@ -8,5 +8,8 @@ type Message struct {
 	RoomID    int       `json:"room_id"`
 	Content   string    `json:"content"`
 	Status    string    `json:"status"`
-	Timestamp time.Time `json:"timestamp"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	DeletedAt time.Time `json:"deleted_at"`
+	IsActive  bool      `json:"is_active"`
 }

@@ -12,7 +12,7 @@ type UserRepository interface {
 type RoomRepository interface {
 	InsertRoom(room *entity.Room) (*entity.Room, error)
 	SelectRoomByID(id int) (*entity.Room, error)
-	UpdatreRoom(room *entity.Room) error
+	UpdateRoom(room *entity.Room) error
 	DeleteRoom(id int) error
 }
 
@@ -20,7 +20,7 @@ type MessageRepository interface {
 	InsertMessage(message *entity.Message) (*entity.Message, error)
 	SelectMessage(id int) (*entity.Message, error)
 	UpdateMessage(message *entity.Message) error
-	DeleteMessage(id int) error
+	SoftDeleteMessage(id int) error
 
 	SelectMessagePaginate(perPage int, page int) ([]*entity.Message, error)
 	SelectMessagesPaginateReverse(perPage int, page int) ([]*entity.Message, error)

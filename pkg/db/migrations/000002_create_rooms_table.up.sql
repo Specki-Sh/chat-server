@@ -1,4 +1,6 @@
 CREATE TABLE rooms (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL
+    owner_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    FOREIGN KEY (owner_id) REFERENCES users(id)
 );
