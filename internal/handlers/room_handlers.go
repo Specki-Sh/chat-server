@@ -22,19 +22,19 @@ func NewRoomHandler(roomUseCase use_case.RoomUseCase) *RoomHandler {
 func (r *RoomHandler) PostRoom(c *gin.Context) {
 	var req use_case.CreateRoomReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	id, err := getUserID(c)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	req.OwnerID = id
 
 	res, err := r.roomUseCase.CreateRoom(&req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -44,13 +44,13 @@ func (r *RoomHandler) PostRoom(c *gin.Context) {
 func (r *RoomHandler) GetRoomInfo(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	room, err := r.roomUseCase.GetRoomInfoByID(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -60,7 +60,7 @@ func (r *RoomHandler) GetRoomInfo(c *gin.Context) {
 func (r *RoomHandler) PatchRoomInfo(c *gin.Context) {
 	var req use_case.EditRoomReq
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	roomID, err := strconv.Atoi(c.Param("id"))
@@ -71,7 +71,7 @@ func (r *RoomHandler) PatchRoomInfo(c *gin.Context) {
 	req.ID = roomID
 	res, err := r.roomUseCase.EditRoomInfo(&req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -81,13 +81,13 @@ func (r *RoomHandler) PatchRoomInfo(c *gin.Context) {
 func (r *RoomHandler) DeleteRoom(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	err = r.roomUseCase.RemoveRoomByID(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -97,17 +97,17 @@ func (r *RoomHandler) DeleteRoom(c *gin.Context) {
 func (r *RoomHandler) AddMemberToRoomHandler(c *gin.Context) {
 	roomID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
 		return
 	}
 	userID, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
 	member, err := r.roomUseCase.AddMemberToRoom(roomID, userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, member)

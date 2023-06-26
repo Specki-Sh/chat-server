@@ -25,13 +25,13 @@ func NewAuthHandler(uus use_case.UserUseCase, aus use_case.AuthUseCase) *AuthHan
 func (a *AuthHandler) SignUp(c *gin.Context) {
 	var u entity2.CreateUserReq
 	if err := c.ShouldBindJSON(&u); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	res, err := a.userUseCase.CreateUser(&u)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -41,13 +41,13 @@ func (a *AuthHandler) SignUp(c *gin.Context) {
 func (a *AuthHandler) SignIn(c *gin.Context) {
 	var user entity2.SignInReq
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	u, err := a.authUseCase.GenerateToken(&user)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -80,6 +80,7 @@ func (a *AuthHandler) UserIdentity(c *gin.Context) {
 
 	c.Set(userCtx, userID)
 	c.Set(usernameCtx, username)
+	c.JSON(http.StatusOK, gin.H{"message": "success"})
 }
 
 func (a *AuthHandler) UserExistMiddlewareByParam(paramKey string) gin.HandlerFunc {

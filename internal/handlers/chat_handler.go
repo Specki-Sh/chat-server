@@ -33,13 +33,13 @@ func (ch *ChatHandler) JoinRoom(c *gin.Context) {
 	// Get the chat ID from the "id" URL parameter.
 	roomID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	userID, err := strconv.Atoi(c.Query("userID"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -69,18 +69,18 @@ func (ch *ChatHandler) JoinRoom(c *gin.Context) {
 func (ch *ChatHandler) EditMessage(c *gin.Context) {
 	var req use_case.EditMessageReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
 	req.ID = id
 	message, err := ch.messageUseCase.EditMessageContent(&req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, message)
@@ -89,12 +89,12 @@ func (ch *ChatHandler) EditMessage(c *gin.Context) {
 func (ch *ChatHandler) DeleteMessage(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
 	err = ch.messageUseCase.RemoveMessageByID(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.Status(http.StatusNoContent)
@@ -103,12 +103,12 @@ func (ch *ChatHandler) DeleteMessage(c *gin.Context) {
 func (ch *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
 	roomID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
 		return
 	}
 	err = ch.messageUseCase.RemoveMessagesByRoomID(roomID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.Status(http.StatusNoContent)
@@ -117,18 +117,18 @@ func (ch *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
 func (ch *ChatHandler) GetMessagesPaginate(c *gin.Context) {
 	var req use_case.GetMessagesPaginateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	roomID, err := strconv.Atoi(c.Param("roomID"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
 	req.RoomID = roomID
 	messages, err := ch.messageUseCase.GetMessagesPaginate(&req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, messages)
