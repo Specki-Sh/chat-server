@@ -3,13 +3,13 @@ package use_case
 import "chat-server/internal/domain/entity"
 
 type CreateRoomReq struct {
-	OwnerId int    `json:"owner_id"`
+	OwnerID int    `json:"owner_id"`
 	Name    string `json:"name"`
 }
 
 type CreateRoomRes struct {
 	ID      int    `json:"id"`
-	OwnerId int    `json:"owner_id"`
+	OwnerID int    `json:"owner_id"`
 	Name    string `json:"name"`
 }
 

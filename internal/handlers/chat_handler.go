@@ -29,7 +29,7 @@ func NewChatHandler(messageUseCase use_case.MessageUseCase) *ChatHandler {
 	}
 }
 
-func (h *ChatHandler) JoinRoom(c *gin.Context) {
+func (ch *ChatHandler) JoinRoom(c *gin.Context) {
 	// Get the chat ID from the "id" URL parameter.
 	roomID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -52,21 +52,21 @@ func (h *ChatHandler) JoinRoom(c *gin.Context) {
 	defer conn.Close(websocket.StatusInternalError, "")
 
 	// Create a new client and add it to the chat.
-	cl := service.NewClient(conn, h.messageBuffSize, roomID, userID)
-	h.addClient(roomID, cl)
-	defer h.deleteClient(roomID, cl)
+	cl := service.NewClient(conn, ch.messageBuffSize, roomID, userID)
+	ch.addClient(roomID, cl)
+	defer ch.deleteClient(roomID, cl)
 
 	// Start a go-routine to send messages to the client.
 	go cl.WriteMessage()
 
 	// Start the broadcast manager for the chat (if it is not already started).
-	go h.startBroadcastManager(roomID)
+	go ch.startBroadcastManager(roomID)
 
 	// Read messages from the client and send them to the chat's broadcast channel.
-	cl.ReadMessage(h.chats[roomID].Broadcast)
+	cl.ReadMessage(ch.chats[roomID].Broadcast)
 }
 
-func (h *ChatHandler) EditMessage(c *gin.Context) {
+func (ch *ChatHandler) EditMessage(c *gin.Context) {
 	var req use_case.EditMessageReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -78,7 +78,7 @@ func (h *ChatHandler) EditMessage(c *gin.Context) {
 		return
 	}
 	req.ID = id
-	message, err := h.messageUseCase.EditMessageContent(&req)
+	message, err := ch.messageUseCase.EditMessageContent(&req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -86,13 +86,13 @@ func (h *ChatHandler) EditMessage(c *gin.Context) {
 	c.JSON(http.StatusOK, message)
 }
 
-func (h *ChatHandler) DeleteMessage(c *gin.Context) {
+func (ch *ChatHandler) DeleteMessage(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
-	err = h.messageUseCase.RemoveMessageByID(id)
+	err = ch.messageUseCase.RemoveMessageByID(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -100,13 +100,13 @@ func (h *ChatHandler) DeleteMessage(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (h *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
+func (ch *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
 	roomID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
 		return
 	}
-	err = h.messageUseCase.RemoveMessagesByRoomID(roomID)
+	err = ch.messageUseCase.RemoveMessagesByRoomID(roomID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -114,7 +114,7 @@ func (h *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (h *ChatHandler) GetMessagesPaginate(c *gin.Context) {
+func (ch *ChatHandler) GetMessagesPaginate(c *gin.Context) {
 	var req use_case.GetMessagesPaginateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -126,7 +126,7 @@ func (h *ChatHandler) GetMessagesPaginate(c *gin.Context) {
 		return
 	}
 	req.RoomID = roomID
-	messages, err := h.messageUseCase.GetMessagesPaginate(&req)
+	messages, err := ch.messageUseCase.GetMessagesPaginate(&req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -134,7 +134,7 @@ func (h *ChatHandler) GetMessagesPaginate(c *gin.Context) {
 	c.JSON(http.StatusOK, messages)
 }
 
-func (h *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.HandlerFunc {
+func (ch *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		messageID, err := strconv.Atoi(c.Param(paramKey))
 		if err != nil {
@@ -142,13 +142,13 @@ func (h *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.Ha
 			return
 		}
 
-		userID, err := getUserId(c)
+		userID, err := getUserID(c)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
-		isOwner, err := h.messageUseCase.IsMessageOwner(userID, messageID)
+		isOwner, err := ch.messageUseCase.IsMessageOwner(userID, messageID)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -163,7 +163,7 @@ func (h *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.Ha
 	}
 }
 
-func (h *ChatHandler) BroadcastMessageUpdateMiddleware(c *gin.Context) {
+func (ch *ChatHandler) BroadcastMessageUpdateMiddleware(c *gin.Context) {
 	messageID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid message ID"})
@@ -175,38 +175,38 @@ func (h *ChatHandler) BroadcastMessageUpdateMiddleware(c *gin.Context) {
 		return
 	}
 
-	msg, err := h.messageUseCase.GetMessageByID(messageID)
+	msg, err := ch.messageUseCase.GetMessageByID(messageID)
 	if err != nil {
 		return
 	}
-	h.sendMessageForAllClientInRoom(msg)
+	ch.sendMessageForAllClientInRoom(msg)
 }
 
 // startBroadcastManager starts the broadcast manager for the chat with the specified ID (if it is not already started).
-func (h *ChatHandler) startBroadcastManager(roomID int) {
-	if chat, ok := h.chats[roomID]; ok && !chat.BroadcastManagerStatus {
-		h.broadcastManager(chat.Broadcast)
+func (ch *ChatHandler) startBroadcastManager(roomID int) {
+	if chat, ok := ch.chats[roomID]; ok && !chat.BroadcastManagerStatus {
+		ch.broadcastManager(chat.Broadcast)
 	}
 }
 
 // broadcastManager handles messages from the broadcast channel and sends them to all clients in the chat.
-func (h *ChatHandler) broadcastManager(broadcast chan *entity.Message) {
+func (ch *ChatHandler) broadcastManager(broadcast chan *entity.Message) {
 	for {
 		select {
 		case msg := <-broadcast:
 			req := use_case.NewCreateMessageReq(msg)
-			message, err := h.messageUseCase.CreateMessage(req)
+			message, err := ch.messageUseCase.CreateMessage(req)
 			if err != nil {
 				// log
 				continue
 			}
-			h.sendMessageForAllClientInRoom(message)
+			ch.sendMessageForAllClientInRoom(message)
 		}
 	}
 }
 
-func (h *ChatHandler) sendMessageForAllClientInRoom(msg *entity.Message) {
-	if chat, ok := h.chats[msg.RoomID]; ok {
+func (ch *ChatHandler) sendMessageForAllClientInRoom(msg *entity.Message) {
+	if chat, ok := ch.chats[msg.RoomID]; ok {
 		for cl := range chat.Clients {
 			cl.Message <- msg
 		}
@@ -214,25 +214,25 @@ func (h *ChatHandler) sendMessageForAllClientInRoom(msg *entity.Message) {
 }
 
 // addClient adds a client to the chat with the specified ID. If the chat does not exist, it is created.
-func (h *ChatHandler) addClient(roomID int, c *service.Client) {
-	h.chatsMu.Lock()
-	defer h.chatsMu.Unlock()
+func (ch *ChatHandler) addClient(roomID int, c *service.Client) {
+	ch.chatsMu.Lock()
+	defer ch.chatsMu.Unlock()
 
-	chat, ok := h.chats[roomID]
+	chat, ok := ch.chats[roomID]
 	if !ok {
-		chat = service.NewChat(h.broadcastBuffSize)
-		h.chats[roomID] = chat
+		chat = service.NewChat(ch.broadcastBuffSize)
+		ch.chats[roomID] = chat
 	}
 
 	chat.Clients[c] = struct{}{}
 }
 
 // deleteClient removes a client from the chat with the specified ID. If there are no more clients in the chat, then the chat is deleted.
-func (h *ChatHandler) deleteClient(roomId int, c *service.Client) {
-	h.chatsMu.Lock()
-	delete(h.chats[roomId].Clients, c)
-	if len(h.chats[roomId].Clients) == 0 {
-		delete(h.chats, roomId)
+func (ch *ChatHandler) deleteClient(roomID int, c *service.Client) {
+	ch.chatsMu.Lock()
+	delete(ch.chats[roomID].Clients, c)
+	if len(ch.chats[roomID].Clients) == 0 {
+		delete(ch.chats, roomID)
 	}
-	h.chatsMu.Unlock()
+	ch.chatsMu.Unlock()
 }

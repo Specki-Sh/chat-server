@@ -17,55 +17,55 @@ func NewRoomService(roomRepo use_case.RoomRepository, memberRepo use_case.Member
 	}
 }
 
-func (s *RoomService) CreateRoom(req *use_case.CreateRoomReq) (*use_case.CreateRoomRes, error) {
+func (r *RoomService) CreateRoom(req *use_case.CreateRoomReq) (*use_case.CreateRoomRes, error) {
 	room := entity.Room{
-		OwnerID: req.OwnerId,
+		OwnerID: req.OwnerID,
 		Name:    req.Name,
 	}
-	newRoom, err := s.roomRepo.InsertRoom(&room)
+	newRoom, err := r.roomRepo.InsertRoom(&room)
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err := s.AddMemberToRoom(newRoom.Id, newRoom.OwnerID); err != nil {
+	if _, err := r.AddMemberToRoom(newRoom.ID, newRoom.OwnerID); err != nil {
 		return nil, err
 	}
 
 	res := use_case.CreateRoomRes{
-		ID:      newRoom.Id,
-		OwnerId: newRoom.OwnerID,
+		ID:      newRoom.ID,
+		OwnerID: newRoom.OwnerID,
 		Name:    newRoom.Name,
 	}
 	return &res, nil
 }
 
-func (s *RoomService) GetRoomInfoByID(id int) (*entity.Room, error) {
-	return s.roomRepo.SelectRoomByID(id)
+func (r *RoomService) GetRoomInfoByID(id int) (*entity.Room, error) {
+	return r.roomRepo.SelectRoomByID(id)
 }
 
-func (s *RoomService) EditRoomInfo(req *use_case.EditRoomReq) (*use_case.EditRoomRes, error) {
+func (r *RoomService) EditRoomInfo(req *use_case.EditRoomReq) (*use_case.EditRoomRes, error) {
 	room := entity.Room{
-		Id:   req.ID,
+		ID:   req.ID,
 		Name: req.Name,
 	}
-	err := s.roomRepo.UpdateRoom(&room)
+	err := r.roomRepo.UpdateRoom(&room)
 	if err != nil {
 		return nil, err
 	}
 
 	res := use_case.EditRoomRes{
-		ID:   room.Id,
+		ID:   room.ID,
 		Name: room.Name,
 	}
 	return &res, nil
 }
 
-func (s *RoomService) RemoveRoomByID(id int) error {
-	return s.roomRepo.DeleteRoom(id)
+func (r *RoomService) RemoveRoomByID(id int) error {
+	return r.roomRepo.DeleteRoom(id)
 }
 
-func (s *RoomService) RoomExists(id int) (bool, error) {
-	_, err := s.roomRepo.SelectRoomByID(id)
+func (r *RoomService) RoomExists(id int) (bool, error) {
+	_, err := r.roomRepo.SelectRoomByID(id)
 	if err != nil {
 		if err == use_case.ErrRoomNotFound {
 			return false, nil
@@ -75,16 +75,16 @@ func (s *RoomService) RoomExists(id int) (bool, error) {
 	return true, nil
 }
 
-func (s *RoomService) IsRoomOwner(roomID int, userID int) (bool, error) {
-	room, err := s.roomRepo.SelectRoomByID(roomID)
+func (r *RoomService) IsRoomOwner(roomID int, userID int) (bool, error) {
+	room, err := r.roomRepo.SelectRoomByID(roomID)
 	if err != nil {
 		return false, err
 	}
 	return room.OwnerID == userID, nil
 }
 
-func (s *RoomService) HasRoomAccess(roomID int, userID int) (bool, error) {
-	members, err := s.memberRepo.SelectMembersByRoomID(roomID)
+func (r *RoomService) HasRoomAccess(roomID int, userID int) (bool, error) {
+	members, err := r.memberRepo.SelectMembersByRoomID(roomID)
 	if err != nil {
 		return false, err
 	}
@@ -96,7 +96,7 @@ func (s *RoomService) HasRoomAccess(roomID int, userID int) (bool, error) {
 	return false, nil
 }
 
-func (s *RoomService) AddMemberToRoom(roomID int, userID int) (*entity.Member, error) {
+func (r *RoomService) AddMemberToRoom(roomID int, userID int) (*entity.Member, error) {
 	member := &entity.Member{RoomID: roomID, UserID: userID}
-	return s.memberRepo.InsertMember(member)
+	return r.memberRepo.InsertMember(member)
 }

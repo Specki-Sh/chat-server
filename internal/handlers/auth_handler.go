@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	userCtx     = "userId"
+	userCtx     = "userID"
 	usernameCtx = "username"
 )
 
@@ -72,13 +72,13 @@ func (a *AuthHandler) UserIdentity(c *gin.Context) {
 		return
 	}
 
-	userId, username, err := a.authUseCase.ParseToken(cookie)
+	userID, username, err := a.authUseCase.ParseToken(cookie)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"reason": err.Error()})
 		return
 	}
 
-	c.Set(userCtx, userId)
+	c.Set(userCtx, userID)
 	c.Set(usernameCtx, username)
 }
 

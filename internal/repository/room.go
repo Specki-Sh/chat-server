@@ -22,7 +22,7 @@ func (r *RoomRepository) InsertRoom(room *entity.Room) (*entity.Room, error) {
 		return nil, use_case.ErrRoomInvalid
 	}
 	query := "INSERT INTO rooms (owner_id, name) VALUES ($1, $2) RETURNING id"
-	err := r.db.QueryRow(query, room.OwnerID, room.Name).Scan(&room.Id)
+	err := r.db.QueryRow(query, room.OwnerID, room.Name).Scan(&room.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func (r *RoomRepository) SelectRoomByID(id int) (*entity.Room, error) {
 	row := r.db.QueryRow(query, id)
 
 	var room entity.Room
-	err := row.Scan(&room.Id, &room.OwnerID, &room.Name)
+	err := row.Scan(&room.ID, &room.OwnerID, &room.Name)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, use_case.ErrRoomNotFound
@@ -45,11 +45,11 @@ func (r *RoomRepository) SelectRoomByID(id int) (*entity.Room, error) {
 }
 
 func (r *RoomRepository) UpdateRoom(room *entity.Room) error {
-	if room.Id == 0 || room.Name == "" {
+	if room.ID == 0 || room.Name == "" {
 		return use_case.ErrRoomInvalid
 	}
 	query := "UPDATE rooms SET name = $1 WHERE id = $2"
-	res, err := r.db.Exec(query, room.Name, room.Id)
+	res, err := r.db.Exec(query, room.Name, room.ID)
 	if err != nil {
 		return err
 	}

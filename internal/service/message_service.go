@@ -15,57 +15,57 @@ func NewMessageService(repo use_case.MessageRepository) *MessageService {
 	}
 }
 
-func (s *MessageService) CreateMessage(req *use_case.CreateMessageReq) (*entity.Message, error) {
+func (m *MessageService) CreateMessage(req *use_case.CreateMessageReq) (*entity.Message, error) {
 	message := &entity.Message{
 		SenderID: req.SenderID,
 		RoomID:   req.RoomID,
 		Content:  req.Content,
 	}
-	return s.repo.InsertMessage(message)
+	return m.repo.InsertMessage(message)
 }
 
-func (s *MessageService) GetMessageByID(id int) (*entity.Message, error) {
-	return s.repo.SelectMessage(id)
+func (m *MessageService) GetMessageByID(id int) (*entity.Message, error) {
+	return m.repo.SelectMessage(id)
 }
 
-func (s *MessageService) EditMessageContent(req *use_case.EditMessageReq) (*entity.Message, error) {
-	message, err := s.repo.SelectMessage(req.ID)
+func (m *MessageService) EditMessageContent(req *use_case.EditMessageReq) (*entity.Message, error) {
+	message, err := m.repo.SelectMessage(req.ID)
 	if err != nil {
 		return nil, err
 	}
 	message.Content = req.Content
-	err = s.repo.UpdateMessage(message)
+	err = m.repo.UpdateMessage(message)
 	if err != nil {
 		return nil, err
 	}
 	return message, nil
 }
 
-func (s *MessageService) MarkReadMessageStatusByID(id int) error {
-	message, err := s.repo.SelectMessage(id)
+func (m *MessageService) MarkReadMessageStatusByID(id int) error {
+	message, err := m.repo.SelectMessage(id)
 	if err != nil {
 		return err
 	}
 	message.Status = "read"
-	return s.repo.UpdateMessage(message)
+	return m.repo.UpdateMessage(message)
 }
 
-func (s *MessageService) RemoveMessageByID(id int) error {
-	return s.repo.SoftDeleteMessageByID(id)
+func (m *MessageService) RemoveMessageByID(id int) error {
+	return m.repo.SoftDeleteMessageByID(id)
 }
 
-func (s *MessageService) GetMessagesPaginate(req *use_case.GetMessagesPaginateReq) ([]*entity.Message, error) {
-	return s.repo.SelectMessagesPaginateReverse(req.RoomID, req.PerPage, req.Page)
+func (m *MessageService) GetMessagesPaginate(req *use_case.GetMessagesPaginateReq) ([]*entity.Message, error) {
+	return m.repo.SelectMessagesPaginateReverse(req.RoomID, req.PerPage, req.Page)
 }
 
-func (s *MessageService) IsMessageOwner(userID int, messageID int) (bool, error) {
-	msg, err := s.repo.SelectMessage(messageID)
+func (m *MessageService) IsMessageOwner(userID int, messageID int) (bool, error) {
+	msg, err := m.repo.SelectMessage(messageID)
 	if err != nil {
 		return false, err
 	}
 	return msg.SenderID == userID, nil
 }
 
-func (s *MessageService) RemoveMessagesByRoomID(id int) error {
-	return s.repo.SoftDeleteMessagesByRoomID(id)
+func (m *MessageService) RemoveMessagesByRoomID(id int) error {
+	return m.repo.SoftDeleteMessagesByRoomID(id)
 }
