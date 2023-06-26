@@ -6,6 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/lib/pq v1.10.9
+	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.16.0
 	golang.org/x/net v0.10.0
 	nhooyr.io/websocket v1.8.7
