@@ -5,6 +5,7 @@ import (
 	"chat-server/internal/domain/use_case"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -79,4 +80,24 @@ func (a *AuthHandler) UserIdentity(c *gin.Context) {
 
 	c.Set(userCtx, userId)
 	c.Set(usernameCtx, username)
+}
+
+func (a *AuthHandler) UserExistMiddlewareByParam(paramKey string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userID, err := strconv.Atoi(c.Param(paramKey))
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		exists, err := a.userUseCase.UserExists(userID)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if !exists {
+			c.AbortWithStatus(http.StatusNotFound)
+			return
+		}
+		c.Next()
+	}
 }

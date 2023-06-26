@@ -39,3 +39,11 @@ func (u *UserService) CreateUser(req *entity.CreateUserReq) (*entity.CreateUserR
 func (u *UserService) GetByEmailAndPassword(email string, password string) (*entity.User, error) {
 	return u.repo.GetUserByEmailAndPassword(email, password)
 }
+
+func (u *UserService) UserExists(id int) (bool, error) {
+	_, err := u.repo.SelectUserByID(id)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

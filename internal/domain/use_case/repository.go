@@ -6,7 +6,8 @@ import (
 
 type UserRepository interface {
 	CreateUser(user *entity.User) (*entity.User, error)
-	GetUserByEmailAndPassword(email string, password string) (*entity.User, error)
+	SelectUserByEmailAndPassword(email string, password string) (*entity.User, error)
+	SelectUserByID(id int) (*entity.User, error)
 }
 
 type RoomRepository interface {
