@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"chat-server/internal/domain/entity"
+	"chat-server/internal/domain/use_case"
 	"chat-server/internal/service"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,8 @@ import (
 )
 
 type ChatHandler struct {
+	messageUseCase use_case.MessageUseCase
+
 	chatsMu sync.Mutex
 	chats   map[int]*service.Chat
 
@@ -56,6 +59,61 @@ func (h *ChatHandler) JoinRoom(c *gin.Context) {
 	cl.ReadMessage(h.chats[id].Broadcast)
 }
 
+type EditMessageReq struct {
+	Content string `json:"content"`
+}
+
+func (h *ChatHandler) EditMessage(c *gin.Context) {
+	var req EditMessageReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		return
+	}
+	editReq := &use_case.EditMessageReq{
+		ID:      id,
+		Content: req.Content,
+	}
+	message, err := h.messageUseCase.EditMessageContent(editReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, message)
+}
+
+func (h *ChatHandler) DeleteMessage(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
+		return
+	}
+	err = h.messageUseCase.RemoveMessageByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+func (h *ChatHandler) GetMessagesPaginate(c *gin.Context) {
+	var req use_case.GetMessagesPaginateReq
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	messages, err := h.messageUseCase.GetMessagesPaginate(&req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, messages)
+}
+
 // startBroadcastManager starts the broadcast manager for the chat with the specified ID (if it is not already started).
 func (h *ChatHandler) startBroadcastManager(roomID int) {
 	if chat, ok := h.chats[roomID]; ok && !chat.BroadcastManagerStatus {
@@ -68,9 +126,15 @@ func (h *ChatHandler) broadcastManager(broadcast chan *entity.Message) {
 	for {
 		select {
 		case msg := <-broadcast:
-			if chat, ok := h.chats[msg.RoomID]; ok {
+			req := use_case.NewCreateMessageReq(msg)
+			message, err := h.messageUseCase.CreateMessage(req)
+			if err != nil {
+				// log
+				continue
+			}
+			if chat, ok := h.chats[message.RoomID]; ok {
 				for cl := range chat.Clients {
-					cl.Message <- msg
+					cl.Message <- message
 				}
 			}
 		}

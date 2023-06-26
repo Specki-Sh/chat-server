@@ -10,6 +10,14 @@ type CreateMessageReq struct {
 	Content  string `json:"content"`
 }
 
+func NewCreateMessageReq(message *entity.Message) *CreateMessageReq {
+	return &CreateMessageReq{
+		SenderID: message.SenderID,
+		RoomID:   message.RoomID,
+		Content:  message.Content,
+	}
+}
+
 type EditMessageReq struct {
 	ID      int    `json:"id"`
 	Content string `json:"content"`
