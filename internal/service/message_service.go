@@ -57,3 +57,11 @@ func (s *MessageService) RemoveMessageByID(id int) error {
 func (s *MessageService) GetMessagesPaginate(req *use_case.GetMessagesPaginateReq) ([]*entity.Message, error) {
 	return s.repo.SelectMessagesPaginateReverse(req.RoomID, req.PerPage, req.Page)
 }
+
+func (s *MessageService) IsMessageOwner(userID int, messageID int) (bool, error) {
+	msg, err := s.repo.SelectMessage(messageID)
+	if err != nil {
+		return false, err
+	}
+	return msg.SenderID == userID, nil
+}

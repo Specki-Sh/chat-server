@@ -114,6 +114,35 @@ func (h *ChatHandler) GetMessagesPaginate(c *gin.Context) {
 	c.JSON(http.StatusOK, messages)
 }
 
+func (h *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		messageID, err := strconv.Atoi(c.Param(paramKey))
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid message ID"})
+			return
+		}
+
+		userID, err := getUserId(c)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		isOwner, err := h.messageUseCase.IsMessageOwner(userID, messageID)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		if !isOwner {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "access denied"})
+			return
+		}
+
+		c.Next()
+	}
+}
+
 // startBroadcastManager starts the broadcast manager for the chat with the specified ID (if it is not already started).
 func (h *ChatHandler) startBroadcastManager(roomID int) {
 	if chat, ok := h.chats[roomID]; ok && !chat.BroadcastManagerStatus {

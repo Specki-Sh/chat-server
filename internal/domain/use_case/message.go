@@ -37,4 +37,5 @@ type MessageUseCase interface {
 	RemoveMessageByID(id int) error
 
 	GetMessagesPaginate(req *GetMessagesPaginateReq) ([]*entity.Message, error)
+	IsMessageOwner(userID int, messageID int) (bool, error)
 }
