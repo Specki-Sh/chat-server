@@ -51,7 +51,7 @@ func (s *MessageService) MarkReadMessageStatusByID(id int) error {
 }
 
 func (s *MessageService) RemoveMessageByID(id int) error {
-	return s.repo.SoftDeleteMessage(id)
+	return s.repo.SoftDeleteMessageByID(id)
 }
 
 func (s *MessageService) GetMessagesPaginate(req *use_case.GetMessagesPaginateReq) ([]*entity.Message, error) {
@@ -64,4 +64,8 @@ func (s *MessageService) IsMessageOwner(userID int, messageID int) (bool, error)
 		return false, err
 	}
 	return msg.SenderID == userID, nil
+}
+
+func (s *MessageService) RemoveMessagesByRoomID(id int) error {
+	return s.repo.SoftDeleteMessagesByRoomID(id)
 }

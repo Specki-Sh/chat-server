@@ -93,6 +93,20 @@ func (h *ChatHandler) DeleteMessage(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
+func (h *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
+	roomID, err := strconv.Atoi(c.Param("roomID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
+		return
+	}
+	err = h.messageUseCase.RemoveMessagesByRoomID(roomID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
 func (h *ChatHandler) GetMessagesPaginate(c *gin.Context) {
 	var req use_case.GetMessagesPaginateReq
 	if err := c.ShouldBindQuery(&req); err != nil {
