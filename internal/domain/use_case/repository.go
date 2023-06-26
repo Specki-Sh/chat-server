@@ -23,6 +23,7 @@ type MessageRepository interface {
 	DeleteMessage(id int) error
 
 	SelectMessagePaginate(perPage int, page int) ([]*entity.Message, error)
+	SelectMessagesPaginateReverse(perPage int, page int) ([]*entity.Message, error)
 }
 
 type MemberRepository interface {

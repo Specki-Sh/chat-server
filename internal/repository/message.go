@@ -66,3 +66,27 @@ func (r *MessageRepository) SelectMessagePaginate(perPage int, page int) ([]*ent
 	}
 	return messages, nil
 }
+
+func (r *MessageRepository) SelectMessagesPaginateReverse(perPage int, page int) ([]*entity.Message, error) {
+	var messages []*entity.Message
+	offset := (page - 1) * perPage
+	query := `SELECT id, sender_id, room_id, content, status, timestamp FROM messages ORDER BY timestamp DESC LIMIT $1 OFFSET $2`
+	rows, err := r.db.Query(query, perPage, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var message entity.Message
+		err = rows.Scan(&message.ID, &message.SenderID, &message.RoomID, &message.Content, &message.Status, &message.Timestamp)
+		if err != nil {
+			return nil, err
+		}
+		messages = append(messages, &message)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return messages, nil
+}
