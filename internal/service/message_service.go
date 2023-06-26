@@ -55,5 +55,5 @@ func (s *MessageService) RemoveMessageByID(id int) error {
 }
 
 func (s *MessageService) GetMessagesPaginate(req *use_case.GetMessagesPaginateReq) ([]*entity.Message, error) {
-	return s.repo.SelectMessagesPaginateReverse(req.PerPage, req.Page)
+	return s.repo.SelectMessagesPaginateReverse(req.RoomID, req.PerPage, req.Page)
 }
