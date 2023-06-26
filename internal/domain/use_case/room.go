@@ -31,4 +31,5 @@ type RoomUseCase interface {
 	RoomExists(id int) (bool, error)
 	IsRoomOwner(roomID int, userID int) (bool, error)
 	HasRoomAccess(roomID int, userID int) (bool, error)
+	AddMemberToRoom(roomID int, userID int) (*entity.Member, error)
 }

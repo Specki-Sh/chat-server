@@ -88,3 +88,8 @@ func (s *RoomService) HasRoomAccess(roomID int, userID int) (bool, error) {
 	}
 	return false, nil
 }
+
+func (s *RoomService) AddMemberToRoom(roomID int, userID int) (*entity.Member, error) {
+	member := &entity.Member{RoomID: roomID, UserID: userID}
+	return s.memberRepo.InsertMember(member)
+}

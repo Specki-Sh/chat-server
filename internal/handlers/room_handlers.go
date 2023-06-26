@@ -21,7 +21,7 @@ func NewRoomHandler(roomUseCase use_case.RoomUseCase) *RoomHandler {
 
 func (h *RoomHandler) PostRoom(c *gin.Context) {
 	var req use_case.CreateRoomReq
-	if err := c.BindJSON(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -87,6 +87,25 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *RoomHandler) AddMemberToRoomHandler(c *gin.Context) {
+	roomID, err := strconv.Atoi(c.Param("roomID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
+		return
+	}
+	userID, err := strconv.Atoi(c.Param("userID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+		return
+	}
+	member, err := h.roomUseCase.AddMemberToRoom(roomID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, member)
 }
 
 func (h *RoomHandler) RoomExistsMiddlewareByParam(paramKey string) gin.HandlerFunc {
