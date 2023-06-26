@@ -6,6 +6,7 @@ import (
 	"chat-server/internal/route"
 	"chat-server/internal/service"
 	"chat-server/pkg/db"
+	"chat-server/pkg/logs"
 	"chat-server/pkg/server"
 	"fmt"
 	"golang.org/x/net/context"
@@ -32,6 +33,10 @@ func Run() {
 	db.StartDbConnection(config)
 	defer db.CloseDbConnection()
 
+	// logger
+	logs.InitLogger()
+	defer logs.CloseLoggerFile()
+
 	userRep := repository.NewUserRepository(db.GetDBConn())
 	roomRep := repository.NewRoomRepository(db.GetDBConn())
 	memberRep := repository.NewMemberRepository(db.GetDBConn())
@@ -41,9 +46,9 @@ func Run() {
 	authSvc := service.NewAuthService(userSvc)
 	messageSvc := service.NewMessageService(msgRep)
 
-	authHandler := handlers.NewAuthHandler(userSvc, authSvc)
-	roomHandler := handlers.NewRoomHandler(roomSvc)
-	chatHandler := handlers.NewChatHandler(messageSvc)
+	authHandler := handlers.NewAuthHandler(userSvc, authSvc, logs.GetLogger())
+	roomHandler := handlers.NewRoomHandler(roomSvc, logs.GetLogger())
+	chatHandler := handlers.NewChatHandler(messageSvc, logs.GetLogger())
 	router := route.NewRouter(authHandler, roomHandler, chatHandler)
 	httpPort := viper.GetString("port")
 
