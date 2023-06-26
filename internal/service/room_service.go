@@ -27,6 +27,10 @@ func (s *RoomService) CreateRoom(req *use_case.CreateRoomReq) (*use_case.CreateR
 		return nil, err
 	}
 
+	if _, err := s.AddMemberToRoom(newRoom.Id, newRoom.OwnerID); err != nil {
+		return nil, err
+	}
+
 	res := use_case.CreateRoomRes{
 		ID:      newRoom.Id,
 		OwnerId: newRoom.OwnerID,
@@ -63,6 +67,9 @@ func (s *RoomService) RemoveRoomByID(id int) error {
 func (s *RoomService) RoomExists(id int) (bool, error) {
 	_, err := s.roomRepo.SelectRoomByID(id)
 	if err != nil {
+		if err == use_case.ErrRoomNotFound {
+			return false, nil
+		}
 		return false, err
 	}
 	return true, nil

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"chat-server/internal/domain/use_case"
 	"database/sql"
 
 	"chat-server/internal/domain/entity"
@@ -17,6 +18,9 @@ func NewRoomRepository(db *sql.DB) *RoomRepository {
 }
 
 func (r *RoomRepository) InsertRoom(room *entity.Room) (*entity.Room, error) {
+	if room.OwnerID == 0 || room.Name == "" {
+		return nil, use_case.ErrRoomInvalid
+	}
 	query := "INSERT INTO rooms (owner_id, name) VALUES ($1, $2) RETURNING id"
 	err := r.db.QueryRow(query, room.OwnerID, room.Name).Scan(&room.Id)
 	if err != nil {
@@ -32,19 +36,45 @@ func (r *RoomRepository) SelectRoomByID(id int) (*entity.Room, error) {
 	var room entity.Room
 	err := row.Scan(&room.Id, &room.OwnerID, &room.Name)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, use_case.ErrRoomNotFound
+		}
 		return nil, err
 	}
 	return &room, nil
 }
 
 func (r *RoomRepository) UpdateRoom(room *entity.Room) error {
+	if room.Id == 0 || room.Name == "" {
+		return use_case.ErrRoomInvalid
+	}
 	query := "UPDATE rooms SET name = $1 WHERE id = $2"
-	_, err := r.db.Exec(query, room.Name, room.Id)
-	return err
+	res, err := r.db.Exec(query, room.Name, room.Id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return use_case.ErrRoomNotFound
+	}
+	return nil
 }
 
 func (r *RoomRepository) DeleteRoom(id int) error {
 	query := "DELETE FROM rooms WHERE id = $1"
-	_, err := r.db.Exec(query, id)
-	return err
+	res, err := r.db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return use_case.ErrRoomNotFound
+	}
+	return nil
 }
