@@ -1,12 +1,12 @@
 package entity
 
 type SignInReq struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    Email    `json:"email"`
+	Password Password `json:"password"`
 }
 
 type SignInRes struct {
 	AccessToken string `json:"-"`
-	ID          int    `json:"id"`
+	ID          ID     `json:"id"`
 	Username    string `json:"username"`
 }

@@ -3,9 +3,9 @@ package entity
 import "time"
 
 type Message struct {
-	ID        int        `json:"id"`
-	SenderID  int        `json:"sender_id"`
-	RoomID    int        `json:"room_id"`
+	ID        ID         `json:"id"`
+	SenderID  ID         `json:"sender_id"`
+	RoomID    ID         `json:"room_id"`
 	Content   string     `json:"content"`
 	Status    string     `json:"status"`
 	CreatedAt *time.Time `json:"created_at"`
@@ -15,8 +15,8 @@ type Message struct {
 }
 
 type CreateMessageReq struct {
-	SenderID int    `json:"sender_id"`
-	RoomID   int    `json:"room_id"`
+	SenderID ID     `json:"sender_id"`
+	RoomID   ID     `json:"room_id"`
 	Content  string `json:"content"`
 }
 
@@ -29,12 +29,12 @@ func NewCreateMessageReq(message *Message) *CreateMessageReq {
 }
 
 type EditMessageReq struct {
-	ID      int    `json:"id"`
+	ID      ID     `json:"id"`
 	Content string `json:"content"`
 }
 
 type GetMessagesPaginateReq struct {
-	RoomID  int `json:"room_id"`
+	RoomID  ID  `json:"room_id"`
 	PerPage int `json:"per_page"`
 	Page    int `json:"page"`
 }

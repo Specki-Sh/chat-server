@@ -1,22 +1,22 @@
 package entity
 
 type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	ID       int          `json:"id"`
+	Username string       `json:"username"`
+	Email    Email        `json:"email"`
+	Password HashPassword `json:"password"`
 }
 
 type CreateUserReq struct {
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Username string   `json:"username"`
+	Email    Email    `json:"email"`
+	Password Password `json:"password"`
 }
 
 type CreateUserRes struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
-	Email    string `json:"email"`
+	Email    Email  `json:"email"`
 }
 
 type EditProfileReq struct {
@@ -27,5 +27,5 @@ type EditProfileReq struct {
 type EditProfileRes struct {
 	ID       int    `json:"id"`
 	Username string `json:"username"`
-	Email    string `json:"email"`
+	Email    Email  `json:"email"`
 }

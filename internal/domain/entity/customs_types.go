@@ -68,3 +68,5 @@ func (p Password) Validate() error {
 }
 
 type HashPassword string
+
+type ID uint
