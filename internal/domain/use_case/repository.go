@@ -8,6 +8,8 @@ import (
 var (
 	ErrUserNotFound = errors.New("user not found")
 	ErrUserInvalid  = errors.New("user data is invalid or incomplete")
+	ErrRoomNotFound = errors.New("room not found")
+	ErrRoomInvalid  = errors.New("room data is invalid or incomplete")
 )
 
 type UserRepository interface {
@@ -15,11 +17,6 @@ type UserRepository interface {
 	SelectUserByEmailAndPassword(email string, password string) (*entity.User, error)
 	SelectUserByID(id int) (*entity.User, error)
 }
-
-var (
-	ErrRoomNotFound = errors.New("room not found")
-	ErrRoomInvalid  = errors.New("room data is invalid or incomplete")
-)
 
 type RoomRepository interface {
 	InsertRoom(room *entity.Room) (*entity.Room, error)

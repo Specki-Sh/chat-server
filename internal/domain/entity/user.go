@@ -18,3 +18,14 @@ type CreateUserRes struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
 }
+
+type EditProfileReq struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+}
+
+type EditProfileRes struct {
+	ID       int    `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}

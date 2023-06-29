@@ -2,31 +2,10 @@ package use_case
 
 import "chat-server/internal/domain/entity"
 
-type CreateRoomReq struct {
-	OwnerID int    `json:"owner_id"`
-	Name    string `json:"name"`
-}
-
-type CreateRoomRes struct {
-	ID      int    `json:"id"`
-	OwnerID int    `json:"owner_id"`
-	Name    string `json:"name"`
-}
-
-type EditRoomReq struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
-type EditRoomRes struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-}
-
 type RoomUseCase interface {
-	CreateRoom(req *CreateRoomReq) (*CreateRoomRes, error)
+	CreateRoom(req *entity.CreateRoomReq) (*entity.CreateRoomRes, error)
 	GetRoomInfoByID(id int) (*entity.Room, error)
-	EditRoomInfo(req *EditRoomReq) (*EditRoomRes, error)
+	EditRoomInfo(req *entity.EditRoomReq) (*entity.EditRoomRes, error)
 	RemoveRoomByID(id int) error
 	RoomExists(id int) (bool, error)
 	IsRoomOwner(roomID int, userID int) (bool, error)
