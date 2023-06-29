@@ -15,7 +15,7 @@ func NewMessageService(repo use_case.MessageRepository) *MessageService {
 	}
 }
 
-func (m *MessageService) CreateMessage(req *use_case.CreateMessageReq) (*entity.Message, error) {
+func (m *MessageService) CreateMessage(req *entity.CreateMessageReq) (*entity.Message, error) {
 	message := &entity.Message{
 		SenderID: req.SenderID,
 		RoomID:   req.RoomID,
@@ -28,7 +28,7 @@ func (m *MessageService) GetMessageByID(id int) (*entity.Message, error) {
 	return m.repo.SelectMessage(id)
 }
 
-func (m *MessageService) EditMessageContent(req *use_case.EditMessageReq) (*entity.Message, error) {
+func (m *MessageService) EditMessageContent(req *entity.EditMessageReq) (*entity.Message, error) {
 	message, err := m.repo.SelectMessage(req.ID)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (m *MessageService) RemoveMessageByID(id int) error {
 	return m.repo.SoftDeleteMessageByID(id)
 }
 
-func (m *MessageService) GetMessagesPaginate(req *use_case.GetMessagesPaginateReq) ([]*entity.Message, error) {
+func (m *MessageService) GetMessagesPaginate(req *entity.GetMessagesPaginateReq) ([]*entity.Message, error) {
 	return m.repo.SelectMessagesPaginateReverse(req.RoomID, req.PerPage, req.Page)
 }
 

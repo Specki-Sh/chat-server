@@ -76,7 +76,7 @@ func (ch *ChatHandler) JoinRoom(c *gin.Context) {
 }
 
 func (ch *ChatHandler) EditMessage(c *gin.Context) {
-	var req use_case.EditMessageReq
+	var req entity.EditMessageReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		ch.logger.Errorf("error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -134,7 +134,7 @@ func (ch *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
 }
 
 func (ch *ChatHandler) GetMessagesPaginate(c *gin.Context) {
-	var req use_case.GetMessagesPaginateReq
+	var req entity.GetMessagesPaginateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		ch.logger.Errorf("error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -224,7 +224,7 @@ func (ch *ChatHandler) broadcastManager(broadcast chan *entity.Message) {
 	for {
 		select {
 		case msg := <-broadcast:
-			req := use_case.NewCreateMessageReq(msg)
+			req := entity.NewCreateMessageReq(msg)
 			message, err := ch.messageUseCase.CreateMessage(req)
 			if err != nil {
 				ch.logger.Errorf("error creating message: %v", err)

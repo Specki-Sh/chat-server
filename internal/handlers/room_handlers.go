@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"chat-server/internal/domain/entity"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -24,7 +25,7 @@ func NewRoomHandler(roomUseCase use_case.RoomUseCase, logger *logrus.Logger) *Ro
 }
 
 func (r *RoomHandler) PostRoom(c *gin.Context) {
-	var req use_case.CreateRoomReq
+	var req entity.CreateRoomReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		r.logger.Errorf("Error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -69,7 +70,7 @@ func (r *RoomHandler) GetRoomInfo(c *gin.Context) {
 }
 
 func (r *RoomHandler) PatchRoomInfo(c *gin.Context) {
-	var req use_case.EditRoomReq
+	var req entity.EditRoomReq
 	if err := c.BindJSON(&req); err != nil {
 		r.logger.Errorf("Error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})

@@ -17,7 +17,7 @@ func NewRoomService(roomRepo use_case.RoomRepository, memberRepo use_case.Member
 	}
 }
 
-func (r *RoomService) CreateRoom(req *use_case.CreateRoomReq) (*use_case.CreateRoomRes, error) {
+func (r *RoomService) CreateRoom(req *entity.CreateRoomReq) (*entity.CreateRoomRes, error) {
 	room := entity.Room{
 		OwnerID: req.OwnerID,
 		Name:    req.Name,
@@ -31,7 +31,7 @@ func (r *RoomService) CreateRoom(req *use_case.CreateRoomReq) (*use_case.CreateR
 		return nil, err
 	}
 
-	res := use_case.CreateRoomRes{
+	res := entity.CreateRoomRes{
 		ID:      newRoom.ID,
 		OwnerID: newRoom.OwnerID,
 		Name:    newRoom.Name,
@@ -43,7 +43,7 @@ func (r *RoomService) GetRoomInfoByID(id int) (*entity.Room, error) {
 	return r.roomRepo.SelectRoomByID(id)
 }
 
-func (r *RoomService) EditRoomInfo(req *use_case.EditRoomReq) (*use_case.EditRoomRes, error) {
+func (r *RoomService) EditRoomInfo(req *entity.EditRoomReq) (*entity.EditRoomRes, error) {
 	room := entity.Room{
 		ID:   req.ID,
 		Name: req.Name,
@@ -53,7 +53,7 @@ func (r *RoomService) EditRoomInfo(req *use_case.EditRoomReq) (*use_case.EditRoo
 		return nil, err
 	}
 
-	res := use_case.EditRoomRes{
+	res := entity.EditRoomRes{
 		ID:   room.ID,
 		Name: room.Name,
 	}
