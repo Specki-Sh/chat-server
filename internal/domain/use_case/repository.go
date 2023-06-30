@@ -16,6 +16,7 @@ type UserRepository interface {
 	CreateUser(user *entity.User) (*entity.User, error)
 	SelectUserByEmailAndPassword(email entity.Email, password entity.HashPassword) (*entity.User, error)
 	SelectUserByID(id entity.ID) (*entity.User, error)
+	UpdateUser(user *entity.User) (*entity.User, error)
 }
 
 type RoomRepository interface {

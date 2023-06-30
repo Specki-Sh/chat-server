@@ -53,5 +53,22 @@ func (u *UserService) UserExists(id entity.ID) (bool, error) {
 }
 
 func (u *UserService) EditUserProfile(req *entity.EditProfileReq) (*entity.EditProfileRes, error) {
-	return nil, nil
+	user, err := u.repo.SelectUserByID(req.ID)
+	if err != nil {
+		return nil, err
+	}
+	user.Username = req.Username
+
+	updatedUser, err := u.repo.UpdateUser(user)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &entity.EditProfileRes{
+		ID:       updatedUser.ID,
+		Username: updatedUser.Username,
+		Email:    updatedUser.Email,
+	}
+
+	return res, nil
 }

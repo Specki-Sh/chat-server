@@ -52,3 +52,16 @@ func (u *UserRepository) SelectUserByID(id entity.ID) (*entity.User, error) {
 	}
 	return &user, nil
 }
+
+func (u *UserRepository) UpdateUser(user *entity.User) (*entity.User, error) {
+	query := `
+        UPDATE users
+        SET username = $1, password = $2, email = $3
+        WHERE id = $4
+    `
+	_, err := u.db.Exec(query, user.Username, user.Password, user.Email, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
