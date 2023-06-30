@@ -2,6 +2,7 @@ package repository
 
 import (
 	"chat-server/internal/domain/use_case"
+	dml "chat-server/pkg/db"
 	"database/sql"
 
 	"chat-server/internal/domain/entity"
@@ -21,7 +22,7 @@ func (r *RoomRepository) InsertRoom(room *entity.Room) (*entity.Room, error) {
 	if room.OwnerID == 0 || room.Name == "" {
 		return nil, use_case.ErrRoomInvalid
 	}
-	query := "INSERT INTO rooms (owner_id, name) VALUES ($1, $2) RETURNING id"
+	query := dml.InsertRoomQuery
 	err := r.db.QueryRow(query, room.OwnerID, room.Name).Scan(&room.ID)
 	if err != nil {
 		return nil, err
@@ -30,7 +31,7 @@ func (r *RoomRepository) InsertRoom(room *entity.Room) (*entity.Room, error) {
 }
 
 func (r *RoomRepository) SelectRoomByID(id entity.ID) (*entity.Room, error) {
-	query := "SELECT id, owner_id, name FROM rooms WHERE id = $1"
+	query := dml.SelectRoomByIDQuery
 	row := r.db.QueryRow(query, id)
 
 	var room entity.Room
@@ -48,7 +49,7 @@ func (r *RoomRepository) UpdateRoom(room *entity.Room) error {
 	if room.ID == 0 || room.Name == "" {
 		return use_case.ErrRoomInvalid
 	}
-	query := "UPDATE rooms SET name = $1 WHERE id = $2"
+	query := dml.UpdateRoomQuery
 	res, err := r.db.Exec(query, room.Name, room.ID)
 	if err != nil {
 		return err
@@ -64,7 +65,7 @@ func (r *RoomRepository) UpdateRoom(room *entity.Room) error {
 }
 
 func (r *RoomRepository) DeleteRoom(id entity.ID) error {
-	query := "DELETE FROM rooms WHERE id = $1"
+	query := dml.DeleteRoomQuery
 	res, err := r.db.Exec(query, id)
 	if err != nil {
 		return err
