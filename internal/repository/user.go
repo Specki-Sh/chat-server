@@ -3,6 +3,7 @@ package repository
 import (
 	"chat-server/internal/domain/entity"
 	"chat-server/internal/domain/use_case"
+	dml "chat-server/pkg/db"
 	"database/sql"
 )
 
@@ -18,7 +19,7 @@ func (u *UserRepository) CreateUser(user *entity.User) (*entity.User, error) {
 	if user.Username == "" || user.Password == "" || user.Email == "" {
 		return nil, use_case.ErrUserInvalid
 	}
-	query := "INSERT INTO users(username, password, email) VALUES ($1, $2, $3) returning id"
+	query := dml.InsertUserQuery
 	err := u.db.QueryRow(query, user.Username, user.Password, user.Email).Scan(&user.ID)
 	if err != nil {
 		return nil, err
@@ -27,9 +28,9 @@ func (u *UserRepository) CreateUser(user *entity.User) (*entity.User, error) {
 	return user, nil
 }
 
-func (u *UserRepository) GetUserByEmailAndPassword(email string, password string) (*entity.User, error) {
+func (u *UserRepository) SelectUserByEmailAndPassword(email entity.Email, password entity.HashPassword) (*entity.User, error) {
 	var user entity.User
-	query := "SELECT id, username, password, email FROM users WHERE email = $1 AND password = $2"
+	query := dml.SelectUserByEmailAndPasswordQuery
 	err := u.db.QueryRow(query, email, password).Scan(&user.ID, &user.Username, &user.Password, &user.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -40,9 +41,9 @@ func (u *UserRepository) GetUserByEmailAndPassword(email string, password string
 	return &user, nil
 }
 
-func (u *UserRepository) SelectUserByID(id int) (*entity.User, error) {
+func (u *UserRepository) SelectUserByID(id entity.ID) (*entity.User, error) {
 	var user entity.User
-	query := "SELECT id, username, password, email FROM users WHERE id = $1"
+	query := dml.SelectUserByIDQuery
 	err := u.db.QueryRow(query, id).Scan(&user.ID, &user.Username, &user.Password, &user.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -51,4 +52,13 @@ func (u *UserRepository) SelectUserByID(id int) (*entity.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (u *UserRepository) UpdateUser(user *entity.User) (*entity.User, error) {
+	query := dml.UpdateUserQuery
+	_, err := u.db.Exec(query, user.Username, user.Password, user.Email, user.ID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

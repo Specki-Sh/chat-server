@@ -17,8 +17,8 @@ const (
 
 type tokenClaims struct {
 	jwt.StandardClaims
-	ID       int    `json:"user_id"`
-	UserName string `json:"user_name"`
+	ID       entity.ID             `json:"user_id"`
+	UserName entity.NonEmptyString `json:"user_name"`
 }
 
 func NewAuthService(userUseCase u.UserUseCase) *AuthService {
@@ -50,11 +50,11 @@ func (a *AuthService) GenerateToken(req *entity.SignInReq) (*entity.SignInRes, e
 		return &entity.SignInRes{}, err
 	}
 
-	return &entity.SignInRes{AccessToken: ss, ID: user.ID, Username: user.Username}, nil
+	return &entity.SignInRes{AccessToken: entity.NonEmptyString(ss), ID: user.ID, Username: user.Username}, nil
 }
 
-func (a *AuthService) ParseToken(accessToken string) (int, string, error) {
-	token, err := jwt.ParseWithClaims(accessToken, &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
+func (a *AuthService) ParseToken(accessToken entity.NonEmptyString) (entity.ID, entity.NonEmptyString, error) {
+	token, err := jwt.ParseWithClaims(string(accessToken), &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid signing method")
 		}

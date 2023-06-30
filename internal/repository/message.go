@@ -2,6 +2,7 @@ package repository
 
 import (
 	"chat-server/internal/domain/entity"
+	dml "chat-server/pkg/db"
 	"database/sql"
 )
 
@@ -16,7 +17,7 @@ func NewMessageRepository(db *sql.DB) *MessageRepository {
 }
 
 func (m *MessageRepository) InsertMessage(message *entity.Message) (*entity.Message, error) {
-	query := `INSERT INTO messages (sender_id, room_id, content) VALUES ($1, $2, $3) RETURNING id, created_at`
+	query := dml.InsertMessageQuery
 	err := m.db.QueryRow(query, message.SenderID, message.RoomID, message.Content).Scan(&message.ID, &message.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -24,8 +25,8 @@ func (m *MessageRepository) InsertMessage(message *entity.Message) (*entity.Mess
 	return message, nil
 }
 
-func (m *MessageRepository) SelectMessage(id int) (*entity.Message, error) {
-	query := `SELECT id, sender_id, room_id, content, status, created_at, updated_at, deleted_at FROM messages WHERE id = $1 AND is_active = true`
+func (m *MessageRepository) SelectMessage(id entity.ID) (*entity.Message, error) {
+	query := dml.SelectMessageQuery
 	message := &entity.Message{}
 	err := m.db.QueryRow(query, id).Scan(&message.ID, &message.SenderID, &message.RoomID,
 		&message.Content, &message.Status, &message.CreatedAt, &message.UpdatedAt, &message.DeletedAt)
@@ -36,27 +37,27 @@ func (m *MessageRepository) SelectMessage(id int) (*entity.Message, error) {
 }
 
 func (m *MessageRepository) UpdateMessage(message *entity.Message) error {
-	query := `UPDATE messages SET sender_id = $1, room_id = $2, content = $3, status = $4, updated_at = CURRENT_TIMESTAMP WHERE id = $5`
+	query := dml.UpdateMessageQuery
 	_, err := m.db.Exec(query, message.SenderID, message.RoomID, message.Content, message.Status, message.ID)
 	return err
 }
 
-func (m *MessageRepository) SoftDeleteMessageByID(id int) error {
-	query := `UPDATE messages SET is_active = false, deleted_at = CURRENT_TIMESTAMP WHERE id = $1`
+func (m *MessageRepository) SoftDeleteMessageByID(id entity.ID) error {
+	query := dml.SoftDeleteMessageByIDQuery
 	_, err := m.db.Exec(query, id)
 	return err
 }
 
-func (m *MessageRepository) SoftDeleteMessagesByRoomID(roomID int) error {
-	query := `UPDATE messages SET is_active = false, deleted_at = CURRENT_TIMESTAMP WHERE room_id = $1`
+func (m *MessageRepository) SoftDeleteMessagesByRoomID(roomID entity.ID) error {
+	query := dml.SoftDeleteMessagesByRoomIDQuery
 	_, err := m.db.Exec(query, roomID)
 	return err
 }
 
-func (m *MessageRepository) SelectMessagePaginate(roomID int, perPage int, page int) ([]*entity.Message, error) {
+func (m *MessageRepository) SelectMessagePaginate(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error) {
 	var messages []*entity.Message
 	offset := perPage * (page - 1)
-	query := `SELECT id, sender_id, room_id, content, status, created_at, updated_at, deleted_at FROM messages WHERE is_active = true AND room_id = $1 LIMIT $2 OFFSET $3`
+	query := dml.SelectMessagePaginateQuery
 	rows, err := m.db.Query(query, roomID, perPage, offset)
 	if err != nil {
 		return nil, err
@@ -77,10 +78,10 @@ func (m *MessageRepository) SelectMessagePaginate(roomID int, perPage int, page 
 	return messages, nil
 }
 
-func (m *MessageRepository) SelectMessagesPaginateReverse(roomID int, perPage int, page int) ([]*entity.Message, error) {
+func (m *MessageRepository) SelectMessagesPaginateReverse(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error) {
 	var messages []*entity.Message
 	offset := (page - 1) * perPage
-	query := `SELECT id, sender_id, room_id, content, status, created_at, updated_at, deleted_at FROM messages WHERE is_active = true AND room_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	query := dml.SelectMessagesPaginateReverseQuery
 	rows, err := m.db.Query(query, roomID, perPage, offset)
 	if err != nil {
 		return nil, err

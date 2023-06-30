@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"chat-server/internal/domain/entity"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
@@ -24,7 +25,7 @@ func NewRoomHandler(roomUseCase use_case.RoomUseCase, logger *logrus.Logger) *Ro
 }
 
 func (r *RoomHandler) PostRoom(c *gin.Context) {
-	var req use_case.CreateRoomReq
+	var req entity.CreateRoomReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		r.logger.Errorf("Error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -50,12 +51,13 @@ func (r *RoomHandler) PostRoom(c *gin.Context) {
 }
 
 func (r *RoomHandler) GetRoomInfo(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	idInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		r.logger.Errorf("Error converting room ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	id := entity.ID(idInt)
 
 	room, err := r.roomUseCase.GetRoomInfoByID(id)
 	if err != nil {
@@ -69,19 +71,20 @@ func (r *RoomHandler) GetRoomInfo(c *gin.Context) {
 }
 
 func (r *RoomHandler) PatchRoomInfo(c *gin.Context) {
-	var req use_case.EditRoomReq
+	var req entity.EditRoomReq
 	if err := c.BindJSON(&req); err != nil {
 		r.logger.Errorf("Error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	roomID, err := strconv.Atoi(c.Param("id"))
+	roomIDInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		r.logger.Errorf("Error converting room ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	req.ID = roomID
+
+	req.ID = entity.ID(roomIDInt)
 	res, err := r.roomUseCase.EditRoomInfo(&req)
 	if err != nil {
 		r.logger.Errorf("Error editing room info: %v", err)
@@ -89,17 +92,18 @@ func (r *RoomHandler) PatchRoomInfo(c *gin.Context) {
 		return
 	}
 
-	r.logger.Infof("Successfully edited room info for ID: %v", roomID)
+	r.logger.Infof("Successfully edited room info for ID: %v", roomIDInt)
 	c.JSON(http.StatusOK, res)
 }
 
 func (r *RoomHandler) DeleteRoom(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	idInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		r.logger.Errorf("Error converting room ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	id := entity.ID(idInt)
 
 	err = r.roomUseCase.RemoveRoomByID(id)
 	if err != nil {
@@ -113,18 +117,20 @@ func (r *RoomHandler) DeleteRoom(c *gin.Context) {
 }
 
 func (r *RoomHandler) AddMemberToRoomHandler(c *gin.Context) {
-	roomID, err := strconv.Atoi(c.Param("id"))
+	roomIDInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		r.logger.Errorf("Error converting room ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
 		return
 	}
-	userID, err := strconv.Atoi(c.Param("userID"))
+	userIDInt, err := strconv.Atoi(c.Param("userID"))
 	if err != nil {
 		r.logger.Errorf("Error converting user ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
 		return
 	}
+	roomID, userID := entity.ID(roomIDInt), entity.ID(userIDInt)
+
 	member, err := r.roomUseCase.AddMemberToRoom(roomID, userID)
 	if err != nil {
 		r.logger.Errorf("Error adding member to room: %v", err)
@@ -137,12 +143,13 @@ func (r *RoomHandler) AddMemberToRoomHandler(c *gin.Context) {
 
 func (r *RoomHandler) RoomExistsMiddlewareByParam(paramKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		roomID, err := strconv.Atoi(c.Param(paramKey))
+		roomIDInt, err := strconv.Atoi(c.Param(paramKey))
 		if err != nil {
 			r.logger.Errorf("Error converting room ID to int: %v", err)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
+		roomID := entity.ID(roomIDInt)
 		exists, err := r.roomUseCase.RoomExists(roomID)
 		if err != nil {
 			r.logger.Errorf("Error checking if room exists: %v", err)
@@ -172,7 +179,7 @@ func (r *RoomHandler) RoomExistsMiddlewareByJSON(jsonKey string) gin.HandlerFunc
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid room ID"})
 			return
 		}
-		exists, err := r.roomUseCase.RoomExists(int(roomID))
+		exists, err := r.roomUseCase.RoomExists(entity.ID(roomID))
 		if err != nil {
 			r.logger.Errorf("Error checking if room exists: %v", err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -188,12 +195,13 @@ func (r *RoomHandler) RoomExistsMiddlewareByJSON(jsonKey string) gin.HandlerFunc
 }
 
 func (r *RoomHandler) RoomPermissionsMiddleware(c *gin.Context) {
-	roomID, err := strconv.Atoi(c.Param("id"))
+	roomIDInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		r.logger.Errorf("Error converting room ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid room ID"})
 		return
 	}
+	roomID := entity.ID(roomIDInt)
 
 	userID, err := getUserID(c)
 	if err != nil {
@@ -217,12 +225,13 @@ func (r *RoomHandler) RoomPermissionsMiddleware(c *gin.Context) {
 }
 
 func (r *RoomHandler) RoomAccessMiddleware(c *gin.Context) {
-	roomID, err := strconv.Atoi(c.Param("roomID"))
+	roomIDInt, err := strconv.Atoi(c.Param("roomID"))
 	if err != nil {
 		r.logger.Errorf("Error converting room ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid room ID"})
 		return
 	}
+	roomID := entity.ID(roomIDInt)
 
 	userID, err := getUserID(c)
 	if err != nil {
