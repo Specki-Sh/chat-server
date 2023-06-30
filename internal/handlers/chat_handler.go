@@ -17,7 +17,7 @@ type ChatHandler struct {
 	messageUseCase use_case.MessageUseCase
 
 	chatsMu sync.Mutex
-	chats   map[int]*service.Chat
+	chats   map[entity.ID]*service.Chat
 
 	logger *logrus.Logger
 
@@ -29,50 +29,62 @@ func NewChatHandler(messageUseCase use_case.MessageUseCase, logger *logrus.Logge
 	return &ChatHandler{
 		messageUseCase: messageUseCase,
 		logger:         logger,
-		chats:          make(map[int]*service.Chat),
+		chats:          make(map[entity.ID]*service.Chat),
 	}
 }
 
 func (ch *ChatHandler) JoinRoom(c *gin.Context) {
-	// Get the chat ID from the "id" URL parameter.
-	roomID, err := strconv.Atoi(c.Param("id"))
+	roomID, userID, err := ch.getRoomIDAndUserIDParams(c)
 	if err != nil {
-		ch.logger.Errorf("error converting roomID to int: %v", err)
+		ch.logger.Errorf("error getting params: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	userID, err := strconv.Atoi(c.Query("userID"))
-	if err != nil {
-		ch.logger.Errorf("error converting userID to int: %v", err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Accept the WebSocket connection.
-	conn, err := websocket.Accept(c.Writer, c.Request, nil)
+	conn, err := ch.acceptWebSocket(c)
 	if err != nil {
 		ch.logger.Errorf("error accepting WebSocket connection: %v", err)
-		fmt.Println(err)
 		return
 	}
 	defer conn.Close(websocket.StatusInternalError, "")
 
-	// Create a new client and add it to the chat.
-	cl := service.NewClient(conn, ch.messageBuffSize, roomID, userID)
-	ch.addClient(roomID, cl)
+	cl := ch.createClient(conn, roomID, userID)
 	defer ch.deleteClient(roomID, cl)
 
-	// Start a go-routine to send messages to the client.
 	go cl.WriteMessage()
-
-	// Start the broadcast manager for the chat (if it is not already started).
 	go ch.startBroadcastManager(roomID)
 
 	ch.logger.Infof("user joined room: %d %d", userID, roomID)
 
-	// Read messages from the client and send them to the chat's broadcast channel.
 	cl.ReadMessage(ch.chats[roomID].Broadcast)
+}
+
+func (ch *ChatHandler) getRoomIDAndUserIDParams(c *gin.Context) (entity.ID, entity.ID, error) {
+	roomIDInt, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return 0, 0, fmt.Errorf("error converting roomID to int: %w", err)
+	}
+
+	userIDInt, err := strconv.Atoi(c.Query("userID"))
+	if err != nil {
+		return 0, 0, fmt.Errorf("error converting userID to int: %w", err)
+	}
+
+	return entity.ID(roomIDInt), entity.ID(userIDInt), nil
+}
+
+func (ch *ChatHandler) acceptWebSocket(c *gin.Context) (*websocket.Conn, error) {
+	conn, err := websocket.Accept(c.Writer, c.Request, nil)
+	if err != nil {
+		return nil, fmt.Errorf("error accepting WebSocket connection: %w", err)
+	}
+	return conn, nil
+}
+
+func (ch *ChatHandler) createClient(conn *websocket.Conn, roomID entity.ID, userID entity.ID) *service.Client {
+	cl := service.NewClient(conn, ch.messageBuffSize, roomID, userID)
+	ch.addClient(roomID, cl)
+	return cl
 }
 
 func (ch *ChatHandler) EditMessage(c *gin.Context) {
@@ -82,19 +94,28 @@ func (ch *ChatHandler) EditMessage(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		ch.logger.Errorf("error converting message ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
-	req.ID = id
+	req.ID = entity.ID(id)
+
+	if err := req.Validate(); err != nil {
+		ch.logger.Errorf("error validating request: %v", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	message, err := ch.messageUseCase.EditMessageContent(&req)
 	if err != nil {
 		ch.logger.Errorf("error editing message content: %v", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
 	ch.logger.Infof("message edited: %d", id)
 	c.JSON(http.StatusOK, message)
 }
@@ -146,7 +167,14 @@ func (ch *ChatHandler) GetMessagesPaginate(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
-	req.RoomID = roomID
+	req.RoomID = entity.ID(roomID)
+
+	if err := req.Validate(); err != nil {
+		ch.logger.Errorf("error validating request: %v", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	messages, err := ch.messageUseCase.GetMessagesPaginate(&req)
 	if err != nil {
 		ch.logger.Errorf("error getting messages paginate: %v", err)
@@ -213,7 +241,7 @@ func (ch *ChatHandler) BroadcastMessageUpdateMiddleware(c *gin.Context) {
 }
 
 // startBroadcastManager starts the broadcast manager for the chat with the specified ID (if it is not already started).
-func (ch *ChatHandler) startBroadcastManager(roomID int) {
+func (ch *ChatHandler) startBroadcastManager(roomID entity.ID) {
 	if chat, ok := ch.chats[roomID]; ok && !chat.BroadcastManagerStatus {
 		ch.broadcastManager(chat.Broadcast)
 	}
@@ -245,7 +273,7 @@ func (ch *ChatHandler) sendMessageForAllClientInRoom(msg *entity.Message) {
 }
 
 // addClient adds a client to the chat with the specified ID. If the chat does not exist, it is created.
-func (ch *ChatHandler) addClient(roomID int, c *service.Client) {
+func (ch *ChatHandler) addClient(roomID entity.ID, c *service.Client) {
 	ch.chatsMu.Lock()
 	defer ch.chatsMu.Unlock()
 
@@ -259,7 +287,7 @@ func (ch *ChatHandler) addClient(roomID int, c *service.Client) {
 }
 
 // deleteClient removes a client from the chat with the specified ID. If there are no more clients in the chat, then the chat is deleted.
-func (ch *ChatHandler) deleteClient(roomID int, c *service.Client) {
+func (ch *ChatHandler) deleteClient(roomID entity.ID, c *service.Client) {
 	ch.chatsMu.Lock()
 	delete(ch.chats[roomID].Clients, c)
 	if len(ch.chats[roomID].Clients) == 0 {
