@@ -7,17 +7,17 @@ import (
 )
 
 func getUserID(c *gin.Context) (entity.ID, error) {
-	id, ok := c.Get(userCtx)
+	idAny, ok := c.Get(userCtx)
 	if !ok {
 		return 0, errors.New("user id not found")
 	}
 
-	idInt, ok := id.(int)
+	idInt, ok := idAny.(entity.ID)
 	if !ok {
 		return 0, errors.New("user id is of invalid type")
 	}
 
-	return entity.ID(idInt), nil
+	return idInt, nil
 }
 
 func getUsername(c *gin.Context) (entity.NonEmptyString, error) {
