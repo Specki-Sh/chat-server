@@ -13,6 +13,8 @@ var (
 	ErrPasswordUpper  = errors.New("password must contain at least one uppercase letter")
 	ErrPasswordLower  = errors.New("password must contain at least one lowercase letter")
 	ErrPasswordNumber = errors.New("password must contain at least one number")
+	ErrEmptyString    = errors.New("string is empty")
+	ErrZeroID         = errors.New("ID cannot be zero")
 )
 
 type ValidateTypes interface {
@@ -67,6 +69,22 @@ func (p Password) Validate() error {
 	return nil
 }
 
-type HashPassword string
+type NonEmptyString string
+
+func (n NonEmptyString) Validate() error {
+	if n == "" {
+		return ErrEmptyString
+	}
+	return nil
+}
+
+type HashPassword NonEmptyString
 
 type ID uint
+
+func (id ID) Validate() error {
+	if id == 0 {
+		return ErrZeroID
+	}
+	return nil
+}

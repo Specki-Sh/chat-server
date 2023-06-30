@@ -30,14 +30,19 @@ func NewAuthHandler(uus use_case.UserUseCase, aus use_case.AuthUseCase, logger *
 }
 
 func (a *AuthHandler) SignUp(c *gin.Context) {
-	var u entity.CreateUserReq
-	if err := c.ShouldBindJSON(&u); err != nil {
+	var user entity.CreateUserReq
+	if err := c.ShouldBindJSON(&user); err != nil {
 		a.logger.Errorf("error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	if err := user.Validate(); err != nil {
+		a.logger.Errorf("Error create user data: %v", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-	res, err := a.userUseCase.CreateUser(&u)
+	res, err := a.userUseCase.CreateUser(&user)
 	if err != nil {
 		a.logger.Errorf("error creating user: %v", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -52,6 +57,11 @@ func (a *AuthHandler) SignIn(c *gin.Context) {
 	var user entity.SignInReq
 	if err := c.ShouldBindJSON(&user); err != nil {
 		a.logger.Errorf("error binding JSON: %v", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := user.Validate(); err != nil {
+		a.logger.Errorf("Error sign-in user data: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -81,6 +91,11 @@ func (a *AuthHandler) PatchUserProfile(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+	if err := req.Validate(); err != nil {
+		a.logger.Errorf("Error user profile data: %v", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
 	user, err := a.userUseCase.EditUserProfile(&req)
 	if err != nil {
@@ -98,20 +113,20 @@ func (a *AuthHandler) UserIdentity(c *gin.Context) {
 	cookie, err := c.Cookie("jwt")
 	if err != nil {
 		a.logger.Errorf("error getting jwt cookie: %v", err)
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"reason": "no jwt cookie"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "no jwt cookie"})
 		return
 	}
 
 	if len(cookie) == 0 {
 		a.logger.Error("jwt cookie is empty")
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"reason": "token is empty"})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token is empty"})
 		return
 	}
 
 	userID, username, err := a.authUseCase.ParseToken(cookie)
 	if err != nil {
 		a.logger.Errorf("error parsing token: %v", err)
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"reason": err.Error()})
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
