@@ -6,5 +6,5 @@ import (
 
 type AuthUseCase interface {
 	GenerateToken(req *entity.SignInReq) (*entity.SignInRes, error)
-	ParseToken(accessToken string) (int, string, error)
+	ParseToken(accessToken entity.NonEmptyString) (entity.ID, entity.NonEmptyString, error)
 }

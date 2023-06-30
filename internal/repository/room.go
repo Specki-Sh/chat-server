@@ -29,7 +29,7 @@ func (r *RoomRepository) InsertRoom(room *entity.Room) (*entity.Room, error) {
 	return room, nil
 }
 
-func (r *RoomRepository) SelectRoomByID(id int) (*entity.Room, error) {
+func (r *RoomRepository) SelectRoomByID(id entity.ID) (*entity.Room, error) {
 	query := "SELECT id, owner_id, name FROM rooms WHERE id = $1"
 	row := r.db.QueryRow(query, id)
 
@@ -63,7 +63,7 @@ func (r *RoomRepository) UpdateRoom(room *entity.Room) error {
 	return nil
 }
 
-func (r *RoomRepository) DeleteRoom(id int) error {
+func (r *RoomRepository) DeleteRoom(id entity.ID) error {
 	query := "DELETE FROM rooms WHERE id = $1"
 	res, err := r.db.Exec(query, id)
 	if err != nil {

@@ -121,12 +121,14 @@ func (ch *ChatHandler) EditMessage(c *gin.Context) {
 }
 
 func (ch *ChatHandler) DeleteMessage(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	idInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		ch.logger.Errorf("error converting message ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
+	id := entity.ID(idInt)
+
 	err = ch.messageUseCase.RemoveMessageByID(id)
 	if err != nil {
 		ch.logger.Errorf("error removing message by ID: %v", err)
@@ -138,12 +140,14 @@ func (ch *ChatHandler) DeleteMessage(c *gin.Context) {
 }
 
 func (ch *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
-	roomID, err := strconv.Atoi(c.Param("id"))
+	roomIDInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		ch.logger.Errorf("error converting room ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
 		return
 	}
+	roomID := entity.ID(roomIDInt)
+
 	err = ch.messageUseCase.RemoveMessagesByRoomID(roomID)
 	if err != nil {
 		ch.logger.Errorf("error removing messages by room ID: %v", err)
@@ -187,12 +191,13 @@ func (ch *ChatHandler) GetMessagesPaginate(c *gin.Context) {
 
 func (ch *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		messageID, err := strconv.Atoi(c.Param(paramKey))
+		messageIDInt, err := strconv.Atoi(c.Param(paramKey))
 		if err != nil {
 			ch.logger.Errorf("error converting message ID to int: %v", err)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid message ID"})
 			return
 		}
+		messageID := entity.ID(messageIDInt)
 
 		userID, err := getUserID(c)
 		if err != nil {
@@ -220,12 +225,13 @@ func (ch *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.H
 }
 
 func (ch *ChatHandler) BroadcastMessageUpdateMiddleware(c *gin.Context) {
-	messageID, err := strconv.Atoi(c.Param("id"))
+	messageIDInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		ch.logger.Errorf("error converting message ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid message ID"})
 		return
 	}
+	messageID := entity.ID(messageIDInt)
 
 	c.Next()
 	if c.IsAborted() {

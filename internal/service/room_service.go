@@ -39,7 +39,7 @@ func (r *RoomService) CreateRoom(req *entity.CreateRoomReq) (*entity.CreateRoomR
 	return &res, nil
 }
 
-func (r *RoomService) GetRoomInfoByID(id int) (*entity.Room, error) {
+func (r *RoomService) GetRoomInfoByID(id entity.ID) (*entity.Room, error) {
 	return r.roomRepo.SelectRoomByID(id)
 }
 
@@ -60,11 +60,11 @@ func (r *RoomService) EditRoomInfo(req *entity.EditRoomReq) (*entity.EditRoomRes
 	return &res, nil
 }
 
-func (r *RoomService) RemoveRoomByID(id int) error {
+func (r *RoomService) RemoveRoomByID(id entity.ID) error {
 	return r.roomRepo.DeleteRoom(id)
 }
 
-func (r *RoomService) RoomExists(id int) (bool, error) {
+func (r *RoomService) RoomExists(id entity.ID) (bool, error) {
 	_, err := r.roomRepo.SelectRoomByID(id)
 	if err != nil {
 		if err == use_case.ErrRoomNotFound {
@@ -75,7 +75,7 @@ func (r *RoomService) RoomExists(id int) (bool, error) {
 	return true, nil
 }
 
-func (r *RoomService) IsRoomOwner(roomID int, userID int) (bool, error) {
+func (r *RoomService) IsRoomOwner(roomID entity.ID, userID entity.ID) (bool, error) {
 	room, err := r.roomRepo.SelectRoomByID(roomID)
 	if err != nil {
 		return false, err
@@ -83,7 +83,7 @@ func (r *RoomService) IsRoomOwner(roomID int, userID int) (bool, error) {
 	return room.OwnerID == userID, nil
 }
 
-func (r *RoomService) HasRoomAccess(roomID int, userID int) (bool, error) {
+func (r *RoomService) HasRoomAccess(roomID entity.ID, userID entity.ID) (bool, error) {
 	members, err := r.memberRepo.SelectMembersByRoomID(roomID)
 	if err != nil {
 		return false, err
@@ -96,7 +96,7 @@ func (r *RoomService) HasRoomAccess(roomID int, userID int) (bool, error) {
 	return false, nil
 }
 
-func (r *RoomService) AddMemberToRoom(roomID int, userID int) (*entity.Member, error) {
+func (r *RoomService) AddMemberToRoom(roomID entity.ID, userID entity.ID) (*entity.Member, error) {
 	member := &entity.Member{RoomID: roomID, UserID: userID}
 	return r.memberRepo.InsertMember(member)
 }

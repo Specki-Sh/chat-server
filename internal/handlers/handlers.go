@@ -1,11 +1,12 @@
 package handlers
 
 import (
+	"chat-server/internal/domain/entity"
 	"errors"
 	"github.com/gin-gonic/gin"
 )
 
-func getUserID(c *gin.Context) (int, error) {
+func getUserID(c *gin.Context) (entity.ID, error) {
 	id, ok := c.Get(userCtx)
 	if !ok {
 		return 0, errors.New("user id not found")
@@ -16,10 +17,10 @@ func getUserID(c *gin.Context) (int, error) {
 		return 0, errors.New("user id is of invalid type")
 	}
 
-	return idInt, nil
+	return entity.ID(idInt), nil
 }
 
-func getUsername(c *gin.Context) (string, error) {
+func getUsername(c *gin.Context) (entity.NonEmptyString, error) {
 	name, ok := c.Get(usernameCtx)
 	if !ok {
 		return "", errors.New("username not found")
@@ -30,5 +31,5 @@ func getUsername(c *gin.Context) (string, error) {
 		return "", errors.New("username is of invalid type")
 	}
 
-	return nameString, nil
+	return entity.NonEmptyString(nameString), nil
 }

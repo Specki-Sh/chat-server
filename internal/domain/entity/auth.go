@@ -16,7 +16,7 @@ func (s *SignInReq) Validate() error {
 }
 
 type SignInRes struct {
-	AccessToken string `json:"-"`
-	ID          ID     `json:"id"`
-	Username    string `json:"username"`
+	AccessToken NonEmptyString `json:"-"`
+	ID          ID             `json:"id"`
+	Username    NonEmptyString `json:"username"`
 }

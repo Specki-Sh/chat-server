@@ -37,11 +37,11 @@ func (u *UserService) CreateUser(req *entity.CreateUserReq) (*entity.CreateUserR
 	return res, nil
 }
 
-func (u *UserService) GetByEmailAndPassword(email string, password string) (*entity.User, error) {
-	return u.repo.GetUserByEmailAndPassword(email, password)
+func (u *UserService) GetByEmailAndPassword(email entity.Email, password entity.HashPassword) (*entity.User, error) {
+	return u.repo.SelectUserByEmailAndPassword(email, password)
 }
 
-func (u *UserService) UserExists(id int) (bool, error) {
+func (u *UserService) UserExists(id entity.ID) (bool, error) {
 	_, err := u.repo.SelectUserByID(id)
 	if err != nil {
 		if err == use_case.ErrUserNotFound {
@@ -50,4 +50,8 @@ func (u *UserService) UserExists(id int) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func (u *UserService) EditUserProfile(req *entity.EditProfileReq) (*entity.EditProfileRes, error) {
+	return nil, nil
 }

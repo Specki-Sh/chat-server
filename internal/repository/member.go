@@ -24,7 +24,7 @@ func (m *MemberRepository) InsertMember(member *entity.Member) (*entity.Member, 
 	return member, nil
 }
 
-func (m *MemberRepository) SelectMembersByRoomID(roomID int) ([]*entity.Member, error) {
+func (m *MemberRepository) SelectMembersByRoomID(roomID entity.ID) ([]*entity.Member, error) {
 	query := "SELECT room_id, user_id FROM members WHERE room_id = $1"
 	rows, err := m.db.Query(query, roomID)
 	if err != nil {

@@ -71,7 +71,7 @@ func (c *Client) ReadMessage(broadcast chan *entity.Message) {
 		msg := &entity.Message{
 			RoomID:   c.RoomID,
 			SenderID: c.UserID,
-			Content:  string(m),
+			Content:  entity.NonEmptyString(m),
 		}
 
 		broadcast <- msg

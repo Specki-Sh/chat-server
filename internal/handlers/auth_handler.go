@@ -73,7 +73,7 @@ func (a *AuthHandler) SignIn(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("jwt", u.AccessToken, 60*60*24, "/", "localhost", false, true)
+	c.SetCookie("jwt", string(u.AccessToken), 60*60*24, "/", "localhost", false, true)
 	a.logger.Infof("user signed in: %v", u)
 	c.JSON(http.StatusOK, u)
 }
@@ -123,7 +123,7 @@ func (a *AuthHandler) UserIdentity(c *gin.Context) {
 		return
 	}
 
-	userID, username, err := a.authUseCase.ParseToken(cookie)
+	userID, username, err := a.authUseCase.ParseToken(entity.NonEmptyString(cookie))
 	if err != nil {
 		a.logger.Errorf("error parsing token: %v", err)
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
@@ -137,12 +137,13 @@ func (a *AuthHandler) UserIdentity(c *gin.Context) {
 
 func (a *AuthHandler) UserPermissionMiddlewareByParam(paramKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID, err := strconv.Atoi(c.Param(paramKey))
+		userIDInt, err := strconv.Atoi(c.Param(paramKey))
 		if err != nil {
 			a.logger.Errorf("Error converting room ID to int: %v", err)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
 			return
 		}
+		userID := entity.ID(userIDInt)
 
 		userTokenID, err := getUserID(c)
 		if err != nil {
@@ -162,13 +163,13 @@ func (a *AuthHandler) UserPermissionMiddlewareByParam(paramKey string) gin.Handl
 
 func (a *AuthHandler) UserExistMiddlewareByParam(paramKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userID, err := strconv.Atoi(c.Param(paramKey))
+		userIDInt, err := strconv.Atoi(c.Param(paramKey))
 		if err != nil {
 			a.logger.Errorf("error converting userID to int: %v", err)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-
+		userID := entity.ID(userIDInt)
 		exists, err := a.userUseCase.UserExists(userID)
 		if err != nil {
 			a.logger.Errorf("error checking if user exists: %v", err)

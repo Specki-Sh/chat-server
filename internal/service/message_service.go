@@ -24,7 +24,7 @@ func (m *MessageService) CreateMessage(req *entity.CreateMessageReq) (*entity.Me
 	return m.repo.InsertMessage(message)
 }
 
-func (m *MessageService) GetMessageByID(id int) (*entity.Message, error) {
+func (m *MessageService) GetMessageByID(id entity.ID) (*entity.Message, error) {
 	return m.repo.SelectMessage(id)
 }
 
@@ -41,7 +41,7 @@ func (m *MessageService) EditMessageContent(req *entity.EditMessageReq) (*entity
 	return message, nil
 }
 
-func (m *MessageService) MarkReadMessageStatusByID(id int) error {
+func (m *MessageService) MarkReadMessageStatusByID(id entity.ID) error {
 	message, err := m.repo.SelectMessage(id)
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (m *MessageService) MarkReadMessageStatusByID(id int) error {
 	return m.repo.UpdateMessage(message)
 }
 
-func (m *MessageService) RemoveMessageByID(id int) error {
+func (m *MessageService) RemoveMessageByID(id entity.ID) error {
 	return m.repo.SoftDeleteMessageByID(id)
 }
 
@@ -58,7 +58,7 @@ func (m *MessageService) GetMessagesPaginate(req *entity.GetMessagesPaginateReq)
 	return m.repo.SelectMessagesPaginateReverse(req.RoomID, req.PerPage, req.Page)
 }
 
-func (m *MessageService) IsMessageOwner(userID int, messageID int) (bool, error) {
+func (m *MessageService) IsMessageOwner(userID entity.ID, messageID entity.ID) (bool, error) {
 	msg, err := m.repo.SelectMessage(messageID)
 	if err != nil {
 		return false, err
@@ -66,6 +66,6 @@ func (m *MessageService) IsMessageOwner(userID int, messageID int) (bool, error)
 	return msg.SenderID == userID, nil
 }
 
-func (m *MessageService) RemoveMessagesByRoomID(id int) error {
+func (m *MessageService) RemoveMessagesByRoomID(id entity.ID) error {
 	return m.repo.SoftDeleteMessagesByRoomID(id)
 }

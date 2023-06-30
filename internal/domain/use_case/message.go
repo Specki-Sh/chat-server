@@ -6,12 +6,12 @@ import (
 
 type MessageUseCase interface {
 	CreateMessage(req *entity.CreateMessageReq) (*entity.Message, error)
-	GetMessageByID(id int) (*entity.Message, error)
+	GetMessageByID(id entity.ID) (*entity.Message, error)
 	EditMessageContent(req *entity.EditMessageReq) (*entity.Message, error)
-	MarkReadMessageStatusByID(id int) error
-	RemoveMessageByID(id int) error
-	RemoveMessagesByRoomID(roomID int) error
+	MarkReadMessageStatusByID(id entity.ID) error
+	RemoveMessageByID(id entity.ID) error
+	RemoveMessagesByRoomID(roomID entity.ID) error
 
 	GetMessagesPaginate(req *entity.GetMessagesPaginateReq) ([]*entity.Message, error)
-	IsMessageOwner(userID int, messageID int) (bool, error)
+	IsMessageOwner(userID entity.ID, messageID entity.ID) (bool, error)
 }
