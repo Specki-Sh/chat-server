@@ -6,10 +6,10 @@ import (
 )
 
 type MessageService struct {
-	repo use_case.MessageRepository
+	repo use_case.MessageStorage
 }
 
-func NewMessageService(repo use_case.MessageRepository) *MessageService {
+func NewMessageService(repo use_case.MessageStorage) *MessageService {
 	return &MessageService{
 		repo: repo,
 	}

@@ -3,16 +3,17 @@ package service
 import (
 	"chat-server/internal/domain/entity"
 	"chat-server/internal/domain/use_case"
-	"chat-server/internal/repository"
 	"chat-server/utils"
 )
 
 type UserService struct {
-	repo *repository.UserRepository
+	repo use_case.UserStorage
 }
 
-func NewUserService(storage *repository.UserRepository) *UserService {
-	return &UserService{storage}
+func NewUserService(userRepo use_case.UserStorage) *UserService {
+	return &UserService{
+		repo: userRepo,
+	}
 }
 
 func (u *UserService) CreateUser(req *entity.CreateUserReq) (*entity.CreateUserRes, error) {

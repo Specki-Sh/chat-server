@@ -6,11 +6,11 @@ import (
 )
 
 type RoomService struct {
-	roomRepo   use_case.RoomRepository
-	memberRepo use_case.MemberRepository
+	roomRepo   use_case.RoomStorage
+	memberRepo use_case.MemberStorage
 }
 
-func NewRoomService(roomRepo use_case.RoomRepository, memberRepo use_case.MemberRepository) *RoomService {
+func NewRoomService(roomRepo use_case.RoomStorage, memberRepo use_case.MemberStorage) *RoomService {
 	return &RoomService{
 		roomRepo:   roomRepo,
 		memberRepo: memberRepo,
