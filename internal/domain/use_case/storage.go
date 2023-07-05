@@ -2,7 +2,9 @@ package use_case
 
 import (
 	"chat-server/internal/domain/entity"
+	"context"
 	"errors"
+	"time"
 )
 
 var (
@@ -42,4 +44,10 @@ type MemberStorage interface {
 	SelectMembersByRoomID(roomID entity.ID) ([]*entity.Member, error)
 	UpdateMember(member *entity.Member) (*entity.Member, error)
 	DeleteMember(member *entity.Member) error
+}
+
+type TokenStorage interface {
+	SetRefreshToken(ctx context.Context, userID entity.ID, tokenID entity.ID, expiresIn time.Duration) error
+	DeleteRefreshToken(ctx context.Context, userID entity.ID, prevTokenID entity.ID) error
+	DeleteUserRefreshTokens(ctx context.Context, userID entity.ID) error
 }
