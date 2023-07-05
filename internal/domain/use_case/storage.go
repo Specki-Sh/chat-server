@@ -47,7 +47,6 @@ type MemberStorage interface {
 }
 
 type TokenStorage interface {
-	SetRefreshToken(ctx context.Context, userID entity.ID, tokenID entity.ID, expiresIn time.Duration) error
-	DeleteRefreshToken(ctx context.Context, userID entity.ID, prevTokenID entity.ID) error
-	DeleteUserRefreshTokens(ctx context.Context, userID entity.ID) error
+	SetInvalidRefreshToken(ctx context.Context, userID entity.ID, refreshToken string, expiresIn time.Duration) error
+	InvalidRefreshTokenExists(ctx context.Context, refreshToken string) (bool, error)
 }
