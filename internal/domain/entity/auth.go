@@ -16,7 +16,19 @@ func (s *SignInReq) Validate() error {
 }
 
 type SignInRes struct {
-	AccessToken NonEmptyString `json:"-"`
-	ID          ID             `json:"id"`
-	Username    NonEmptyString `json:"username"`
+	TokenPair TokenPair      `json:"token_pair"`
+	ID        ID             `json:"id"`
+	Username  NonEmptyString `json:"username"`
+}
+
+type RefreshTokenReq struct {
+	RefreshToken string         `json:"refresh_token"`
+	ID           ID             `json:"id"`
+	Username     NonEmptyString `json:"username"`
+}
+
+type RefreshTokenRes struct {
+	TokenPair TokenPair      `json:"token_pair"`
+	ID        ID             `json:"id"`
+	Username  NonEmptyString `json:"username"`
 }
