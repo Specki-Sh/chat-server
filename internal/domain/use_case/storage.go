@@ -21,6 +21,12 @@ type UserStorage interface {
 	UpdateUser(user *entity.User) (*entity.User, error)
 }
 
+type UserCacheStorage interface {
+	SetUserData(ctx context.Context, secretCode string, userData *entity.UserData) error
+	GetUserData(ctx context.Context, secretCode string) (*entity.UserData, error)
+	DeleteUserData(ctx context.Context, secretCode string) error
+}
+
 type RoomStorage interface {
 	InsertRoom(room *entity.Room) (*entity.Room, error)
 	SelectRoomByID(id entity.ID) (*entity.Room, error)
