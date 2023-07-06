@@ -2,12 +2,13 @@ package service
 
 import (
 	"chat-server/internal/domain/entity"
+	"chat-server/internal/domain/use_case"
 	"fmt"
 	"net/smtp"
 )
 
-func NewSMTPService(config *SMTPConfig) *SMTPService {
-	return &SMTPService{
+func NewSMTPService(config *SMTPConfig) use_case.SMTPUseCase {
+	return &smtpService{
 		config: config,
 	}
 }
@@ -19,11 +20,11 @@ type SMTPConfig struct {
 	Port     string
 }
 
-type SMTPService struct {
+type smtpService struct {
 	config *SMTPConfig
 }
 
-func (s *SMTPService) Send(mail *entity.Mail) error {
+func (s *smtpService) Send(mail *entity.Mail) error {
 	from := s.config.Email
 	password := s.config.Password
 	toList := []string{mail.To}

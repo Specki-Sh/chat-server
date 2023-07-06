@@ -5,19 +5,19 @@ import (
 	"chat-server/internal/domain/use_case"
 )
 
-type RoomService struct {
+type roomService struct {
 	roomRepo   use_case.RoomStorage
 	memberRepo use_case.MemberStorage
 }
 
-func NewRoomService(roomRepo use_case.RoomStorage, memberRepo use_case.MemberStorage) *RoomService {
-	return &RoomService{
+func NewRoomService(roomRepo use_case.RoomStorage, memberRepo use_case.MemberStorage) use_case.RoomUseCase {
+	return &roomService{
 		roomRepo:   roomRepo,
 		memberRepo: memberRepo,
 	}
 }
 
-func (r *RoomService) CreateRoom(req *entity.CreateRoomReq) (*entity.CreateRoomRes, error) {
+func (r *roomService) CreateRoom(req *entity.CreateRoomReq) (*entity.CreateRoomRes, error) {
 	room := entity.Room{
 		OwnerID: req.OwnerID,
 		Name:    req.Name,
@@ -39,11 +39,11 @@ func (r *RoomService) CreateRoom(req *entity.CreateRoomReq) (*entity.CreateRoomR
 	return &res, nil
 }
 
-func (r *RoomService) GetRoomInfoByID(id entity.ID) (*entity.Room, error) {
+func (r *roomService) GetRoomInfoByID(id entity.ID) (*entity.Room, error) {
 	return r.roomRepo.SelectRoomByID(id)
 }
 
-func (r *RoomService) EditRoomInfo(req *entity.EditRoomReq) (*entity.EditRoomRes, error) {
+func (r *roomService) EditRoomInfo(req *entity.EditRoomReq) (*entity.EditRoomRes, error) {
 	room := entity.Room{
 		ID:   req.ID,
 		Name: req.Name,
@@ -60,11 +60,11 @@ func (r *RoomService) EditRoomInfo(req *entity.EditRoomReq) (*entity.EditRoomRes
 	return &res, nil
 }
 
-func (r *RoomService) RemoveRoomByID(id entity.ID) error {
+func (r *roomService) RemoveRoomByID(id entity.ID) error {
 	return r.roomRepo.DeleteRoom(id)
 }
 
-func (r *RoomService) RoomExists(id entity.ID) (bool, error) {
+func (r *roomService) RoomExists(id entity.ID) (bool, error) {
 	_, err := r.roomRepo.SelectRoomByID(id)
 	if err != nil {
 		if err == use_case.ErrRoomNotFound {
@@ -75,7 +75,7 @@ func (r *RoomService) RoomExists(id entity.ID) (bool, error) {
 	return true, nil
 }
 
-func (r *RoomService) IsRoomOwner(roomID entity.ID, userID entity.ID) (bool, error) {
+func (r *roomService) IsRoomOwner(roomID entity.ID, userID entity.ID) (bool, error) {
 	room, err := r.roomRepo.SelectRoomByID(roomID)
 	if err != nil {
 		return false, err
@@ -83,7 +83,7 @@ func (r *RoomService) IsRoomOwner(roomID entity.ID, userID entity.ID) (bool, err
 	return room.OwnerID == userID, nil
 }
 
-func (r *RoomService) HasRoomAccess(roomID entity.ID, userID entity.ID) (bool, error) {
+func (r *roomService) HasRoomAccess(roomID entity.ID, userID entity.ID) (bool, error) {
 	members, err := r.memberRepo.SelectMembersByRoomID(roomID)
 	if err != nil {
 		return false, err
@@ -96,7 +96,7 @@ func (r *RoomService) HasRoomAccess(roomID entity.ID, userID entity.ID) (bool, e
 	return false, nil
 }
 
-func (r *RoomService) AddMemberToRoom(roomID entity.ID, userID entity.ID) (*entity.Member, error) {
+func (r *roomService) AddMemberToRoom(roomID entity.ID, userID entity.ID) (*entity.Member, error) {
 	member := &entity.Member{RoomID: roomID, UserID: userID}
 	return r.memberRepo.InsertMember(member)
 }

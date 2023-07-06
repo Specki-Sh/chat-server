@@ -9,7 +9,7 @@ type MessageService struct {
 	repo use_case.MessageStorage
 }
 
-func NewMessageService(repo use_case.MessageStorage) *MessageService {
+func NewMessageService(repo use_case.MessageStorage) use_case.MessageUseCase {
 	return &MessageService{
 		repo: repo,
 	}

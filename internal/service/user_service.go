@@ -6,17 +6,17 @@ import (
 	"chat-server/utils"
 )
 
-type UserService struct {
+type userService struct {
 	repo use_case.UserStorage
 }
 
-func NewUserService(userRepo use_case.UserStorage) *UserService {
-	return &UserService{
+func NewUserService(userRepo use_case.UserStorage) use_case.UserUseCase {
+	return &userService{
 		repo: userRepo,
 	}
 }
 
-func (u *UserService) CreateUser(req *entity.CreateUserReq) (*entity.CreateUserRes, error) {
+func (u *userService) CreateUser(req *entity.CreateUserReq) (*entity.CreateUserRes, error) {
 	hashedPassword := utils.HashPassword(req.Password)
 	user := &entity.User{
 		Username: req.Username,
@@ -38,11 +38,11 @@ func (u *UserService) CreateUser(req *entity.CreateUserReq) (*entity.CreateUserR
 	return res, nil
 }
 
-func (u *UserService) GetByEmailAndPassword(email entity.Email, password entity.HashPassword) (*entity.User, error) {
+func (u *userService) GetByEmailAndPassword(email entity.Email, password entity.HashPassword) (*entity.User, error) {
 	return u.repo.SelectUserByEmailAndPassword(email, password)
 }
 
-func (u *UserService) UserExists(id entity.ID) (bool, error) {
+func (u *userService) UserExists(id entity.ID) (bool, error) {
 	_, err := u.repo.SelectUserByID(id)
 	if err != nil {
 		if err == use_case.ErrUserNotFound {
@@ -53,7 +53,7 @@ func (u *UserService) UserExists(id entity.ID) (bool, error) {
 	return true, nil
 }
 
-func (u *UserService) EditUserProfile(req *entity.EditProfileReq) (*entity.EditProfileRes, error) {
+func (u *userService) EditUserProfile(req *entity.EditProfileReq) (*entity.EditProfileRes, error) {
 	user, err := u.repo.SelectUserByID(req.ID)
 	if err != nil {
 		return nil, err
