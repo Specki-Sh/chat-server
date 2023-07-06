@@ -32,3 +32,7 @@ type RefreshTokenRes struct {
 	ID        ID             `json:"id"`
 	Username  NonEmptyString `json:"username"`
 }
+
+type LogoutReq struct {
+	RefreshToken string `json:"refresh_token"`
+}

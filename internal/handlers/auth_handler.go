@@ -7,25 +7,29 @@ import (
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 const (
-	userCtx     = "userID"
-	usernameCtx = "username"
+	authorizationHeader = "Authorization"
+	userCtx             = "userID"
+	usernameCtx         = "username"
 )
 
 type AuthHandler struct {
-	userUseCase use_case.UserUseCase
-	authUseCase use_case.AuthUseCase
+	userUseCase  use_case.UserUseCase
+	authUseCase  use_case.AuthUseCase
+	tokenUseCase use_case.TokenUseCase
 
 	logger *logrus.Logger
 }
 
-func NewAuthHandler(uus use_case.UserUseCase, aus use_case.AuthUseCase, logger *logrus.Logger) *AuthHandler {
+func NewAuthHandler(uus use_case.UserUseCase, aus use_case.AuthUseCase, tus use_case.TokenUseCase, logger *logrus.Logger) *AuthHandler {
 	return &AuthHandler{
-		userUseCase: uus,
-		authUseCase: aus,
-		logger:      logger,
+		userUseCase:  uus,
+		authUseCase:  aus,
+		tokenUseCase: tus,
+		logger:       logger,
 	}
 }
 
@@ -54,32 +58,48 @@ func (a *AuthHandler) SignUp(c *gin.Context) {
 }
 
 func (a *AuthHandler) SignIn(c *gin.Context) {
-	var user entity.SignInReq
-	if err := c.ShouldBindJSON(&user); err != nil {
+	var req entity.SignInReq
+	if err := c.ShouldBindJSON(&req); err != nil {
 		a.logger.Errorf("error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := user.Validate(); err != nil {
+	if err := req.Validate(); err != nil {
 		a.logger.Errorf("Error sign-in user data: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	u, err := a.authUseCase.GenerateToken(&user)
+	res, err := a.authUseCase.Authenticate(&req)
 	if err != nil {
 		a.logger.Errorf("error generating token: %v", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.SetCookie("jwt", string(u.AccessToken), 60*60*24, "/", "localhost", false, true)
-	a.logger.Infof("user signed in: %v", u)
-	c.JSON(http.StatusOK, u)
+	a.logger.Infof("user with email %s signed in", req.Email)
+	c.JSON(http.StatusOK, res)
 }
 
 func (a *AuthHandler) Logout(c *gin.Context) {
-	c.SetCookie("jwt", "", -1, "", "", false, true)
+	var req entity.LogoutReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		a.logger.Errorf("error binding JSON: %v", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.RefreshToken == "" {
+		a.logger.Error("error empty refresh token")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "error empty refresh token"})
+		return
+	}
+
+	if err := a.authUseCase.Logout(c, req.RefreshToken); err != nil {
+		a.logger.Errorf("error invalidate token: %v", err)
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	a.logger.Info("user logged out")
 	c.JSON(http.StatusOK, gin.H{"message": "logout successful"})
 }
@@ -110,20 +130,24 @@ func (a *AuthHandler) PatchUserProfile(c *gin.Context) {
 }
 
 func (a *AuthHandler) UserIdentity(c *gin.Context) {
-	cookie, err := c.Cookie("jwt")
-	if err != nil {
-		a.logger.Errorf("error getting jwt cookie: %v", err)
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "no jwt cookie"})
+	header := c.GetHeader(authorizationHeader)
+	if header == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"reason": "empty auth header"})
 		return
 	}
 
-	if len(cookie) == 0 {
-		a.logger.Error("jwt cookie is empty")
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "token is empty"})
+	headerParts := strings.Split(header, " ")
+	if len(headerParts) != 2 || headerParts[0] != "Bearer" {
+		c.JSON(http.StatusUnauthorized, gin.H{"reason": "invalid auth header"})
 		return
 	}
 
-	userID, username, err := a.authUseCase.ParseToken(entity.NonEmptyString(cookie))
+	if len(headerParts[1]) == 0 {
+		c.JSON(http.StatusUnauthorized, gin.H{"reason": "token is empty"})
+		return
+	}
+
+	userID, username, err := a.tokenUseCase.ParseAccessToken(headerParts[1])
 	if err != nil {
 		a.logger.Errorf("error parsing token: %v", err)
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
