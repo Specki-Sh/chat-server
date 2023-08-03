@@ -1,13 +1,15 @@
 package handlers
 
 import (
-	"chat-server/internal/domain/entity"
-	"chat-server/internal/domain/use_case"
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+
+	"chat-server/internal/domain/entity"
+	"chat-server/internal/domain/use_case"
 )
 
 const (

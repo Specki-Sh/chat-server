@@ -1,12 +1,14 @@
 package repository
 
 import (
-	"chat-server/internal/domain/entity"
-	"chat-server/internal/domain/use_case"
 	"context"
 	"fmt"
-	"github.com/redis/go-redis/v9"
 	"time"
+
+	"github.com/redis/go-redis/v9"
+
+	"chat-server/internal/domain/entity"
+	"chat-server/internal/domain/use_case"
 )
 
 type redisTokenRepository struct {

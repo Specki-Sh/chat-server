@@ -1,10 +1,11 @@
 package repository
 
 import (
+	"database/sql"
+
 	"chat-server/internal/domain/entity"
 	"chat-server/internal/domain/use_case"
 	dml "chat-server/pkg/db"
-	"database/sql"
 )
 
 type UserRepository struct {

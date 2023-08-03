@@ -1,10 +1,11 @@
 package use_case
 
 import (
-	"chat-server/internal/domain/entity"
 	"context"
 	"errors"
 	"time"
+
+	"chat-server/internal/domain/entity"
 )
 
 var (

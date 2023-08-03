@@ -1,14 +1,14 @@
 package handlers
 
 import (
-	"chat-server/internal/domain/entity"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"strconv"
 
-	"chat-server/internal/domain/use_case"
-
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+
+	"chat-server/internal/domain/entity"
+	"chat-server/internal/domain/use_case"
 )
 
 type RoomHandler struct {

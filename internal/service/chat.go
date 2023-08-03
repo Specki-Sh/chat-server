@@ -1,11 +1,13 @@
 package service
 
 import (
-	"chat-server/internal/domain/entity"
 	"context"
 	"encoding/json"
 	"io"
+
 	"nhooyr.io/websocket"
+
+	"chat-server/internal/domain/entity"
 )
 
 type Chat struct {

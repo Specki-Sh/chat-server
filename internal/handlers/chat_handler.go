@@ -1,16 +1,18 @@
 package handlers
 
 import (
+	"fmt"
+	"net/http"
+	"strconv"
+	"sync"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"nhooyr.io/websocket"
+
 	"chat-server/internal/domain/entity"
 	"chat-server/internal/domain/use_case"
 	"chat-server/internal/service"
-	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-	"net/http"
-	"nhooyr.io/websocket"
-	"strconv"
-	"sync"
 )
 
 type ChatHandler struct {

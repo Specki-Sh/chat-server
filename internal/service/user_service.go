@@ -1,10 +1,11 @@
 package service
 
 import (
+	"context"
+
 	"chat-server/internal/domain/entity"
 	"chat-server/internal/domain/use_case"
 	"chat-server/utils"
-	"context"
 )
 
 type userService struct {

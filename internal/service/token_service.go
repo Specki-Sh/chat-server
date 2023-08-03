@@ -1,13 +1,15 @@
 package service
 
 import (
-	"chat-server/internal/domain/entity"
-	"chat-server/internal/domain/use_case"
 	"context"
 	"crypto/rsa"
 	"fmt"
-	"github.com/golang-jwt/jwt"
 	"time"
+
+	"github.com/golang-jwt/jwt"
+
+	"chat-server/internal/domain/entity"
+	"chat-server/internal/domain/use_case"
 )
 
 type KeyPair struct {

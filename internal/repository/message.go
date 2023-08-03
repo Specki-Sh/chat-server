@@ -1,9 +1,10 @@
 package repository
 
 import (
+	"database/sql"
+
 	"chat-server/internal/domain/entity"
 	dml "chat-server/pkg/db"
-	"database/sql"
 )
 
 type MessageRepository struct {

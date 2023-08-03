@@ -1,8 +1,9 @@
 package route
 
 import (
-	"chat-server/internal/handlers"
 	"github.com/gin-gonic/gin"
+
+	"chat-server/internal/handlers"
 )
 
 type Router struct {

@@ -1,10 +1,11 @@
 package service
 
 import (
-	"chat-server/internal/domain/entity"
-	"chat-server/internal/domain/use_case"
 	"fmt"
 	"net/smtp"
+
+	"chat-server/internal/domain/entity"
+	"chat-server/internal/domain/use_case"
 )
 
 func NewSMTPService(config *SMTPConfig) use_case.SMTPUseCase {

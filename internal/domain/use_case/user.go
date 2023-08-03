@@ -1,8 +1,9 @@
 package use_case
 
 import (
-	"chat-server/internal/domain/entity"
 	"context"
+
+	"chat-server/internal/domain/entity"
 )
 
 type UserUseCase interface {

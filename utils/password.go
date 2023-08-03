@@ -1,9 +1,10 @@
 package utils
 
 import (
-	"chat-server/internal/domain/entity"
 	"crypto/sha1"
 	"encoding/hex"
+
+	"chat-server/internal/domain/entity"
 )
 
 // TODO: make it env variable

@@ -1,6 +1,15 @@
 package app
 
 import (
+	"fmt"
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/spf13/viper"
+	"golang.org/x/net/context"
+
 	"chat-server/internal/handlers"
 	"chat-server/internal/repository"
 	"chat-server/internal/route"
@@ -8,14 +17,6 @@ import (
 	"chat-server/pkg/db"
 	"chat-server/pkg/logger"
 	"chat-server/pkg/server"
-	"fmt"
-	"golang.org/x/net/context"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-
-	"github.com/spf13/viper"
 )
 
 func Run() {

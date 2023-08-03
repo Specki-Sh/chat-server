@@ -1,10 +1,12 @@
 package repository
 
 import (
-	"chat-server/internal/domain/entity"
 	"context"
 	"encoding/json"
+
 	"github.com/redis/go-redis/v9"
+
+	"chat-server/internal/domain/entity"
 )
 
 type UserCacheRepository struct {
