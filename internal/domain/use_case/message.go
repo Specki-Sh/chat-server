@@ -12,6 +12,6 @@ type MessageUseCase interface {
 	RemoveMessageByID(id entity.ID) error
 	RemoveMessageBulkByRoomID(roomID entity.ID) error
 
-	GetMessageBulkPaginate(req *entity.GetMessageBulkPaginateReq) ([]*entity.Message, error)
+	GetMessageBulkPaginate(req *entity.GetMessageBulkPaginateReq) ([]entity.Message, error)
 	IsMessageOwner(userID entity.ID, messageID entity.ID) (bool, error)
 }

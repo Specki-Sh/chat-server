@@ -26,7 +26,7 @@ func (m *MemberRepository) InsertMember(member *entity.Member) (*entity.Member, 
 	return member, nil
 }
 
-func (m *MemberRepository) SelectMemberBulkByRoomID(roomID entity.ID) ([]*entity.Member, error) {
+func (m *MemberRepository) SelectMemberBulkByRoomID(roomID entity.ID) ([]entity.Member, error) {
 	query := dml.SelectMemberBulkByRoomIDQuery
 	rows, err := m.db.Query(query, roomID)
 	if err != nil {
@@ -34,14 +34,14 @@ func (m *MemberRepository) SelectMemberBulkByRoomID(roomID entity.ID) ([]*entity
 	}
 	defer rows.Close()
 
-	var members []*entity.Member
+	var members []entity.Member
 	for rows.Next() {
 		var member entity.Member
 		err := rows.Scan(&member.RoomID, &member.UserID)
 		if err != nil {
 			return nil, err
 		}
-		members = append(members, &member)
+		members = append(members, member)
 	}
 	return members, nil
 }

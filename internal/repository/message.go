@@ -55,8 +55,8 @@ func (m *MessageRepository) SoftDeleteMessageBulkByRoomID(roomID entity.ID) erro
 	return err
 }
 
-func (m *MessageRepository) SelectMessageBulkPaginate(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error) {
-	var messages []*entity.Message
+func (m *MessageRepository) SelectMessageBulkPaginate(roomID entity.ID, perPage uint, page uint) ([]entity.Message, error) {
+	var messages []entity.Message
 	offset := perPage * (page - 1)
 	query := dml.SelectMessageBulkPaginateQuery
 	rows, err := m.db.Query(query, roomID, perPage, offset)
@@ -65,8 +65,9 @@ func (m *MessageRepository) SelectMessageBulkPaginate(roomID entity.ID, perPage 
 	}
 	defer rows.Close()
 	for rows.Next() {
-		message := &entity.Message{}
-		err = rows.Scan(&message.ID, &message.SenderID, &message.RoomID, &message.Content, &message.Status, &message.CreatedAt, &message.UpdatedAt, &message.DeletedAt)
+		var message entity.Message
+		err = rows.Scan(&message.ID, &message.SenderID, &message.RoomID, &message.Content,
+			&message.Status, &message.CreatedAt, &message.UpdatedAt, &message.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -79,8 +80,8 @@ func (m *MessageRepository) SelectMessageBulkPaginate(roomID entity.ID, perPage 
 	return messages, nil
 }
 
-func (m *MessageRepository) SelectMessageBulkPaginateReverse(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error) {
-	var messages []*entity.Message
+func (m *MessageRepository) SelectMessageBulkPaginateReverse(roomID entity.ID, perPage uint, page uint) ([]entity.Message, error) {
+	var messages []entity.Message
 	offset := (page - 1) * perPage
 	query := dml.SelectMessageBulkPaginateReverseQuery
 	rows, err := m.db.Query(query, roomID, perPage, offset)
@@ -90,11 +91,12 @@ func (m *MessageRepository) SelectMessageBulkPaginateReverse(roomID entity.ID, p
 	defer rows.Close()
 	for rows.Next() {
 		var message entity.Message
-		err = rows.Scan(&message.ID, &message.SenderID, &message.RoomID, &message.Content, &message.Status, &message.CreatedAt, &message.UpdatedAt, &message.DeletedAt)
+		err = rows.Scan(&message.ID, &message.SenderID, &message.RoomID, &message.Content,
+			&message.Status, &message.CreatedAt, &message.UpdatedAt, &message.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
-		messages = append(messages, &message)
+		messages = append(messages, message)
 	}
 	err = rows.Err()
 	if err != nil {
