@@ -21,12 +21,12 @@ import (
 func Run() {
 	// yaml
 	if err := initConfig(); err != nil {
-		log.Fatalf("Error occured while init viper configs: %s", err.Error())
+		log.Fatalf("Error occured while init viper config: %s", err.Error())
 		return
 	}
 	var config db.Config
 	if err := viper.UnmarshalKey("db", &config); err != nil {
-		log.Fatalf("Error unmarshaling configs: %s", err)
+		log.Fatalf("Error unmarshaling config: %s", err)
 	}
 	config.Password = os.Getenv("DB_PASSWORD")
 
@@ -73,7 +73,7 @@ func Run() {
 }
 
 func initConfig() error {
-	viper.AddConfigPath("configs")
+	viper.AddConfigPath("config")
 	viper.SetConfigName("config")
 	return viper.ReadInConfig()
 }

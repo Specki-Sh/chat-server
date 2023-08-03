@@ -52,3 +52,9 @@ type EditProfileRes struct {
 	Username NonEmptyString `json:"username"`
 	Email    Email          `json:"email"`
 }
+
+type UserData struct {
+	Username NonEmptyString `json:"username"`
+	Email    Email          `json:"email"`
+	Password HashPassword   `json:"password"`
+}
