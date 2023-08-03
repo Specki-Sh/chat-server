@@ -59,8 +59,8 @@ func (m *MessageService) RemoveMessageByID(id entity.ID) error {
 	return nil
 }
 
-func (m *MessageService) GetMessagesPaginate(req *entity.GetMessagesPaginateReq) ([]*entity.Message, error) {
-	messageBulk, err := m.repo.SelectMessagesPaginateReverse(req.RoomID, req.PerPage, req.Page)
+func (m *MessageService) GetMessageBulkPaginate(req *entity.GetMessageBulkPaginateReq) ([]*entity.Message, error) {
+	messageBulk, err := m.repo.SelectMessageBulkPaginateReverse(req.RoomID, req.PerPage, req.Page)
 	if err != nil {
 		return nil, fmt.Errorf("message service: %w", err)
 	}
@@ -75,8 +75,8 @@ func (m *MessageService) IsMessageOwner(userID entity.ID, messageID entity.ID) (
 	return msg.SenderID == userID, nil
 }
 
-func (m *MessageService) RemoveMessagesByRoomID(id entity.ID) error {
-	if err := m.repo.SoftDeleteMessagesByRoomID(id); err != nil {
+func (m *MessageService) RemoveMessageBulkByRoomID(id entity.ID) error {
+	if err := m.repo.SoftDeleteMessageBulkByRoomID(id); err != nil {
 		return fmt.Errorf("message service: %w", err)
 	}
 	return nil

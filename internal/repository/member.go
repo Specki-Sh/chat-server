@@ -26,8 +26,8 @@ func (m *MemberRepository) InsertMember(member *entity.Member) (*entity.Member, 
 	return member, nil
 }
 
-func (m *MemberRepository) SelectMembersByRoomID(roomID entity.ID) ([]*entity.Member, error) {
-	query := dml.SelectMembersByRoomIDQuery
+func (m *MemberRepository) SelectMemberBulkByRoomID(roomID entity.ID) ([]*entity.Member, error) {
+	query := dml.SelectMemberBulkByRoomIDQuery
 	rows, err := m.db.Query(query, roomID)
 	if err != nil {
 		return nil, err

@@ -150,7 +150,7 @@ func (ch *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
 	}
 	roomID := entity.ID(roomIDInt)
 
-	err = ch.messageUseCase.RemoveMessagesByRoomID(roomID)
+	err = ch.messageUseCase.RemoveMessageBulkByRoomID(roomID)
 	if err != nil {
 		ch.logger.Errorf("error removing messages by room ID: %v", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -160,8 +160,8 @@ func (ch *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func (ch *ChatHandler) GetMessagesPaginate(c *gin.Context) {
-	var req entity.GetMessagesPaginateReq
+func (ch *ChatHandler) GetMessageBulkPaginate(c *gin.Context) {
+	var req entity.GetMessageBulkPaginateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		ch.logger.Errorf("error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -181,7 +181,7 @@ func (ch *ChatHandler) GetMessagesPaginate(c *gin.Context) {
 		return
 	}
 
-	messages, err := ch.messageUseCase.GetMessagesPaginate(&req)
+	messages, err := ch.messageUseCase.GetMessageBulkPaginate(&req)
 	if err != nil {
 		ch.logger.Errorf("error getting messages paginate: %v", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

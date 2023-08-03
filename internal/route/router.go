@@ -79,7 +79,7 @@ func (r *Router) SetupRouter() *gin.Engine {
 		r.authHandler.UserIdentity,
 		r.roomHandler.RoomExistsMiddlewareByParam("roomID"),
 		r.roomHandler.RoomAccessMiddleware,
-		r.chatHandler.GetMessagesPaginate,
+		r.chatHandler.GetMessageBulkPaginate,
 	)
 	messages.PATCH("/:id",
 		r.authHandler.UserIdentity,

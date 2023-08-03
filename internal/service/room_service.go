@@ -84,7 +84,7 @@ func (r *roomService) IsRoomOwner(roomID entity.ID, userID entity.ID) (bool, err
 }
 
 func (r *roomService) HasRoomAccess(roomID entity.ID, userID entity.ID) (bool, error) {
-	members, err := r.memberRepo.SelectMembersByRoomID(roomID)
+	members, err := r.memberRepo.SelectMemberBulkByRoomID(roomID)
 	if err != nil {
 		return false, err
 	}

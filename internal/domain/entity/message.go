@@ -43,13 +43,13 @@ func (e *EditMessageReq) Validate() error {
 	return nil
 }
 
-type GetMessagesPaginateReq struct {
+type GetMessageBulkPaginateReq struct {
 	RoomID  ID   `json:"room_id"`
 	PerPage uint `json:"per_page"`
 	Page    uint `json:"page"`
 }
 
-func (g *GetMessagesPaginateReq) Validate() error {
+func (g *GetMessageBulkPaginateReq) Validate() error {
 	if err := g.RoomID.Validate(); err != nil {
 		return err
 	}

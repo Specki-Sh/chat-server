@@ -40,15 +40,15 @@ type MessageStorage interface {
 	SelectMessage(id entity.ID) (*entity.Message, error)
 	UpdateMessage(message *entity.Message) error
 	SoftDeleteMessageByID(id entity.ID) error
-	SoftDeleteMessagesByRoomID(roomID entity.ID) error
+	SoftDeleteMessageBulkByRoomID(roomID entity.ID) error
 
-	SelectMessagePaginate(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error)
-	SelectMessagesPaginateReverse(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error)
+	SelectMessageBulkPaginate(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error)
+	SelectMessageBulkPaginateReverse(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error)
 }
 
 type MemberStorage interface {
 	InsertMember(member *entity.Member) (*entity.Member, error)
-	SelectMembersByRoomID(roomID entity.ID) ([]*entity.Member, error)
+	SelectMemberBulkByRoomID(roomID entity.ID) ([]*entity.Member, error)
 	UpdateMember(member *entity.Member) (*entity.Member, error)
 	DeleteMember(member *entity.Member) error
 }

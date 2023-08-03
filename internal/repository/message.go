@@ -49,16 +49,16 @@ func (m *MessageRepository) SoftDeleteMessageByID(id entity.ID) error {
 	return err
 }
 
-func (m *MessageRepository) SoftDeleteMessagesByRoomID(roomID entity.ID) error {
-	query := dml.SoftDeleteMessagesByRoomIDQuery
+func (m *MessageRepository) SoftDeleteMessageBulkByRoomID(roomID entity.ID) error {
+	query := dml.SoftDeleteMessageBulkByRoomIDQuery
 	_, err := m.db.Exec(query, roomID)
 	return err
 }
 
-func (m *MessageRepository) SelectMessagePaginate(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error) {
+func (m *MessageRepository) SelectMessageBulkPaginate(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error) {
 	var messages []*entity.Message
 	offset := perPage * (page - 1)
-	query := dml.SelectMessagePaginateQuery
+	query := dml.SelectMessageBulkPaginateQuery
 	rows, err := m.db.Query(query, roomID, perPage, offset)
 	if err != nil {
 		return nil, err
@@ -79,10 +79,10 @@ func (m *MessageRepository) SelectMessagePaginate(roomID entity.ID, perPage uint
 	return messages, nil
 }
 
-func (m *MessageRepository) SelectMessagesPaginateReverse(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error) {
+func (m *MessageRepository) SelectMessageBulkPaginateReverse(roomID entity.ID, perPage uint, page uint) ([]*entity.Message, error) {
 	var messages []*entity.Message
 	offset := (page - 1) * perPage
-	query := dml.SelectMessagesPaginateReverseQuery
+	query := dml.SelectMessageBulkPaginateReverseQuery
 	rows, err := m.db.Query(query, roomID, perPage, offset)
 	if err != nil {
 		return nil, err
