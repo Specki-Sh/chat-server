@@ -25,29 +25,32 @@ func (a *authService) Authenticate(req *entity.SignInReq) (*entity.SignInRes, er
 	hashPassword := utils.HashPassword(req.Password)
 	user, err := a.userUseCase.GetByEmailAndPassword(req.Email, hashPassword)
 	if err != nil {
-		return nil, fmt.Errorf("auth service: %w", err)
+		return nil, fmt.Errorf("authService.Authenticate: %w", err)
 	}
 
 	tokenPair, err := a.tokenUseCase.GenerateTokenPair(user)
 	if err != nil {
-		return nil, fmt.Errorf("auth service: %w", err)
+		return nil, fmt.Errorf("authService.Authenticate: %w", err)
 	}
 
 	return &entity.SignInRes{TokenPair: *tokenPair, ID: user.ID, Username: user.Username}, nil
 }
 
 func (a *authService) Logout(ctx context.Context, refreshToken string) error {
-	return a.tokenUseCase.InvalidateRefreshToken(ctx, refreshToken)
+	if err := a.tokenUseCase.InvalidateRefreshToken(ctx, refreshToken); err != nil {
+		return fmt.Errorf("authService.Authenticate: %w", err)
+	}
+	return nil
 }
 
 func (a *authService) RefreshTokenPair(ctx context.Context, req *entity.RefreshTokenReq) (*entity.RefreshTokenRes, error) {
 	if err := a.tokenUseCase.ValidateRefreshToken(ctx, req.RefreshToken); err != nil {
-		return nil, fmt.Errorf("auth service: %w", err)
+		return nil, fmt.Errorf("authService.RefreshTokenPair: %w", err)
 	}
 
 	accessToken, err := a.tokenUseCase.GenerateAccessToken(req.ID, req.Username)
 	if err != nil {
-		return nil, fmt.Errorf("auth service: %w", err)
+		return nil, fmt.Errorf("authService.RefreshTokenPair: %w", err)
 	}
 
 	tokenPair := entity.TokenPair{RefreshToken: req.RefreshToken, AccessToken: accessToken}

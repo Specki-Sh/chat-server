@@ -24,7 +24,8 @@ func NewTokenRepository(redisClient *redis.Client) use_case.TokenStorage {
 func (r *redisTokenRepository) SetInvalidRefreshToken(ctx context.Context, userID entity.ID, refreshToken string, expiresIn time.Duration) error {
 	key := fmt.Sprintf("%s:%s", refreshToken, "invalid")
 	if err := r.redis.Set(ctx, key, userID, expiresIn).Err(); err != nil {
-		return fmt.Errorf("Could not SET refresh token to redis for userID: %d: %v\n", userID, err)
+		return fmt.Errorf("redisTokenRepository.SetInvalidRefreshToken: %w",
+			fmt.Errorf("could not SET refresh token to redis for userID: %d: %w", userID, err))
 	}
 	return nil
 }
@@ -33,7 +34,8 @@ func (r *redisTokenRepository) InvalidRefreshTokenExists(ctx context.Context, re
 	key := fmt.Sprintf("%s:%s", refreshToken, "invalid")
 	result, err := r.redis.Exists(ctx, key).Result()
 	if err != nil {
-		return false, fmt.Errorf("Could not check if refresh token exists in redis for refreshToken: %s: %v\n", refreshToken, err)
+		return false, fmt.Errorf("redisTokenRepository.SetInvalidRefreshToken: %w",
+			fmt.Errorf("could not check if refresh token exists in redis for refreshToken: %s: %w", refreshToken, err))
 	}
 	return result == 1, nil
 }

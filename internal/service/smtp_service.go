@@ -52,7 +52,7 @@ func (s *smtpService) Send(mail *entity.Mail) error {
 	auth := smtp.PlainAuth("", from, password, host)
 	err := smtp.SendMail(host+":"+port, auth, from, toList, []byte(body))
 	if err != nil {
-		return err
+		return fmt.Errorf("smtpService.Send: %w", err)
 	}
 	return nil
 }

@@ -52,12 +52,12 @@ type tokenClaims struct {
 func (ts *tokenService) GenerateTokenPair(user *entity.User) (*entity.TokenPair, error) {
 	accessToken, err := ts.generateToken(user.ID, user.Username, ts.AccessKeys.PubKey, ts.AccessExpiration)
 	if err != nil {
-		return nil, fmt.Errorf("Could not generate access token: %v\n", err)
+		return nil, fmt.Errorf("tokenService.GenerateTokenPair: %w", err)
 	}
 
 	refreshToken, err := ts.generateToken(user.ID, user.Username, ts.RefreshKeys.PubKey, ts.RefreshExpiration)
 	if err != nil {
-		return nil, fmt.Errorf("Could not generate refresh token: %v\n", err)
+		return nil, fmt.Errorf("tokenService.GenerateTokenPair: %w", err)
 	}
 
 	tokenPair := &entity.TokenPair{
@@ -71,7 +71,7 @@ func (ts *tokenService) GenerateTokenPair(user *entity.User) (*entity.TokenPair,
 func (ts *tokenService) ParseAccessToken(accessToken string) (entity.ID, entity.NonEmptyString, error) {
 	claims, err := ts.parseToken(accessToken, ts.AccessKeys.PrivKey)
 	if err != nil {
-		return 0, "", err
+		return 0, "", fmt.Errorf("tokenService.ParseAccessToken: %w", err)
 	}
 	return claims.ID, claims.UserName, nil
 }
@@ -79,7 +79,7 @@ func (ts *tokenService) ParseAccessToken(accessToken string) (entity.ID, entity.
 func (ts *tokenService) ParseRefreshToken(tokenString string) (entity.ID, entity.NonEmptyString, error) {
 	claims, err := ts.parseToken(tokenString, ts.RefreshKeys.PrivKey)
 	if err != nil {
-		return 0, "", err
+		return 0, "", fmt.Errorf("tokenService.ParseRefreshToken: %w", err)
 	}
 	return claims.ID, claims.UserName, nil
 }
@@ -87,7 +87,7 @@ func (ts *tokenService) ParseRefreshToken(tokenString string) (entity.ID, entity
 func (ts *tokenService) GenerateAccessToken(userID entity.ID, username entity.NonEmptyString) (string, error) {
 	accessToken, err := ts.generateToken(userID, username, ts.AccessKeys.PubKey, ts.AccessExpiration)
 	if err != nil {
-		return "", fmt.Errorf("Could not generate access token: %v\n", err)
+		return "", fmt.Errorf("tokenService.GenerateAccessToken: %w", err)
 	}
 	return accessToken, nil
 }
@@ -95,14 +95,14 @@ func (ts *tokenService) GenerateAccessToken(userID entity.ID, username entity.No
 func (ts *tokenService) ValidateRefreshToken(ctx context.Context, refreshToken string) error {
 	exists, err := ts.TokenRepository.InvalidRefreshTokenExists(ctx, refreshToken)
 	if err != nil {
-		return err
+		return fmt.Errorf("tokenService.ValidateRefreshToken: %w", err)
 	}
 	if exists {
-		return fmt.Errorf("refresh token is invalid")
+		return fmt.Errorf("tokenService.ValidateRefreshToken: %w", fmt.Errorf("refresh token is invalid: %s", refreshToken))
 	}
 
 	if _, err := ts.parseToken(refreshToken, ts.RefreshKeys.PrivKey); err != nil {
-		return err
+		return fmt.Errorf("tokenService.ValidateRefreshToken: %w", err)
 	}
 
 	return nil
@@ -111,10 +111,13 @@ func (ts *tokenService) ValidateRefreshToken(ctx context.Context, refreshToken s
 func (ts *tokenService) InvalidateRefreshToken(ctx context.Context, refreshToken string) error {
 	claims, err := ts.parseToken(refreshToken, ts.RefreshKeys.PrivKey)
 	if err != nil {
-		return err
+		return fmt.Errorf("tokenService.InvalidateRefreshToken: %w", err)
 	}
 	expiresIn := time.Until(time.Unix(claims.ExpiresAt, 0))
-	return ts.TokenRepository.SetInvalidRefreshToken(ctx, claims.ID, refreshToken, expiresIn)
+	if err := ts.TokenRepository.SetInvalidRefreshToken(ctx, claims.ID, refreshToken, expiresIn); err != nil {
+		return fmt.Errorf("tokenService.InvalidateRefreshToken: %w", err)
+	}
+	return nil
 }
 
 func (ts *tokenService) parseToken(tokenString string, key *rsa.PrivateKey) (*tokenClaims, error) {
@@ -124,11 +127,11 @@ func (ts *tokenService) parseToken(tokenString string, key *rsa.PrivateKey) (*to
 		return key, nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Could not parse JWT token: %v\n", err)
+		return nil, fmt.Errorf("tokenService.parseToken: %w", err)
 	}
 
 	if !token.Valid {
-		return nil, fmt.Errorf("Invalid JWT token\n")
+		return nil, fmt.Errorf("tokenService.parseToken: %w", fmt.Errorf("invalid jwt token: %s", tokenString))
 	}
 
 	return claims, nil
@@ -149,7 +152,7 @@ func (ts *tokenService) generateToken(userID entity.ID, userName entity.NonEmpty
 
 	tokenString, err := token.SignedString(key)
 	if err != nil {
-		return "", fmt.Errorf("Could not generate JWT token: %v\n", err)
+		return "", fmt.Errorf("tokenService.generateToken: %w", err)
 	}
 
 	return tokenString, nil
