@@ -17,7 +17,7 @@ type Config struct {
 }
 
 // initRedis creates a new Redis client using the settings from Config and returns it.
-func initRedis(cfg Config) *redis.Client {
+func initRedis(cfg *Config) *redis.Client {
 	client := redis.NewClient(&redis.Options{
 		Addr:     cfg.Addr,
 		Password: cfg.Password,
@@ -28,7 +28,7 @@ func initRedis(cfg Config) *redis.Client {
 }
 
 // StartRedisConnection creates a new connection to Redis and stores it in the global client variable.
-func StartRedisConnection(cfg Config) {
+func StartRedisConnection(cfg *Config) {
 	client = initRedis(cfg)
 }
 

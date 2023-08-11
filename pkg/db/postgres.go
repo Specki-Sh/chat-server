@@ -18,7 +18,7 @@ type Config struct {
 	SSLMode  string
 }
 
-func initDB(config Config) *sql.DB {
+func initDB(config *Config) *sql.DB {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", config.Host, config.Port, config.Username, config.Password, config.DBName, config.SSLMode)
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -29,7 +29,7 @@ func initDB(config Config) *sql.DB {
 }
 
 // StartDbConnection Creates connection to database
-func StartDbConnection(config Config) {
+func StartDbConnection(config *Config) {
 	database = initDB(config)
 }
 
