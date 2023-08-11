@@ -50,12 +50,12 @@ type tokenClaims struct {
 }
 
 func (ts *tokenService) GenerateTokenPair(user *entity.User) (*entity.TokenPair, error) {
-	accessToken, err := ts.generateToken(user.ID, user.Username, ts.AccessKeys.PubKey, ts.AccessExpiration)
+	accessToken, err := ts.generateToken(user.ID, user.Username, ts.AccessKeys.PrivKey, ts.AccessExpiration)
 	if err != nil {
 		return nil, fmt.Errorf("tokenService.GenerateTokenPair: %w", err)
 	}
 
-	refreshToken, err := ts.generateToken(user.ID, user.Username, ts.RefreshKeys.PubKey, ts.RefreshExpiration)
+	refreshToken, err := ts.generateToken(user.ID, user.Username, ts.RefreshKeys.PrivKey, ts.RefreshExpiration)
 	if err != nil {
 		return nil, fmt.Errorf("tokenService.GenerateTokenPair: %w", err)
 	}
@@ -69,7 +69,7 @@ func (ts *tokenService) GenerateTokenPair(user *entity.User) (*entity.TokenPair,
 }
 
 func (ts *tokenService) ParseAccessToken(accessToken string) (entity.ID, entity.NonEmptyString, error) {
-	claims, err := ts.parseToken(accessToken, ts.AccessKeys.PrivKey)
+	claims, err := ts.parseToken(accessToken, ts.AccessKeys.PubKey)
 	if err != nil {
 		return 0, "", fmt.Errorf("tokenService.ParseAccessToken: %w", err)
 	}
@@ -77,7 +77,7 @@ func (ts *tokenService) ParseAccessToken(accessToken string) (entity.ID, entity.
 }
 
 func (ts *tokenService) ParseRefreshToken(tokenString string) (entity.ID, entity.NonEmptyString, error) {
-	claims, err := ts.parseToken(tokenString, ts.RefreshKeys.PrivKey)
+	claims, err := ts.parseToken(tokenString, ts.RefreshKeys.PubKey)
 	if err != nil {
 		return 0, "", fmt.Errorf("tokenService.ParseRefreshToken: %w", err)
 	}
@@ -85,7 +85,7 @@ func (ts *tokenService) ParseRefreshToken(tokenString string) (entity.ID, entity
 }
 
 func (ts *tokenService) GenerateAccessToken(userID entity.ID, username entity.NonEmptyString) (string, error) {
-	accessToken, err := ts.generateToken(userID, username, ts.AccessKeys.PubKey, ts.AccessExpiration)
+	accessToken, err := ts.generateToken(userID, username, ts.AccessKeys.PrivKey, ts.AccessExpiration)
 	if err != nil {
 		return "", fmt.Errorf("tokenService.GenerateAccessToken: %w", err)
 	}
@@ -101,7 +101,7 @@ func (ts *tokenService) ValidateRefreshToken(ctx context.Context, refreshToken s
 		return fmt.Errorf("tokenService.ValidateRefreshToken: %w", fmt.Errorf("refresh token is invalid: %s", refreshToken))
 	}
 
-	if _, err := ts.parseToken(refreshToken, ts.RefreshKeys.PrivKey); err != nil {
+	if _, err := ts.parseToken(refreshToken, ts.RefreshKeys.PubKey); err != nil {
 		return fmt.Errorf("tokenService.ValidateRefreshToken: %w", err)
 	}
 
@@ -109,7 +109,7 @@ func (ts *tokenService) ValidateRefreshToken(ctx context.Context, refreshToken s
 }
 
 func (ts *tokenService) InvalidateRefreshToken(ctx context.Context, refreshToken string) error {
-	claims, err := ts.parseToken(refreshToken, ts.RefreshKeys.PrivKey)
+	claims, err := ts.parseToken(refreshToken, ts.RefreshKeys.PubKey)
 	if err != nil {
 		return fmt.Errorf("tokenService.InvalidateRefreshToken: %w", err)
 	}
@@ -120,7 +120,7 @@ func (ts *tokenService) InvalidateRefreshToken(ctx context.Context, refreshToken
 	return nil
 }
 
-func (ts *tokenService) parseToken(tokenString string, key *rsa.PrivateKey) (*tokenClaims, error) {
+func (ts *tokenService) parseToken(tokenString string, key *rsa.PublicKey) (*tokenClaims, error) {
 	claims := &tokenClaims{}
 
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -137,7 +137,7 @@ func (ts *tokenService) parseToken(tokenString string, key *rsa.PrivateKey) (*to
 	return claims, nil
 }
 
-func (ts *tokenService) generateToken(userID entity.ID, userName entity.NonEmptyString, key *rsa.PublicKey, expiresIn *time.Duration) (string, error) {
+func (ts *tokenService) generateToken(userID entity.ID, userName entity.NonEmptyString, key *rsa.PrivateKey, expiresIn *time.Duration) (string, error) {
 	expirationTime := time.Now().Add(*expiresIn)
 
 	claims := &tokenClaims{
