@@ -19,5 +19,8 @@ logs/
 .idea/
 .vscode/
 
+# configs
+.env
+
 # work files
 TODO.md

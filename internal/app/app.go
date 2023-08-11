@@ -7,32 +7,33 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 
+	"chat-server/config"
 	"chat-server/internal/handlers"
 	"chat-server/internal/repository"
 	"chat-server/internal/route"
 	"chat-server/internal/service"
 	"chat-server/pkg/db"
 	"chat-server/pkg/logger"
+	"chat-server/pkg/redis"
 	"chat-server/pkg/server"
 )
 
 func Run() {
 	// yaml
-	if err := initConfig(); err != nil {
-		log.Fatalf("Error occured while init viper config: %s", err.Error())
+	cfg := config.Config{}
+	if err := cfg.Parse(); err != nil {
+		log.Fatalf("Error while parsing yml file: %v", err)
 		return
 	}
-	var config db.Config
-	if err := viper.UnmarshalKey("db", &config); err != nil {
-		log.Fatalf("Error unmarshaling config: %s", err)
-	}
-	config.Password = os.Getenv("DB_PASSWORD")
-
-	db.StartDbConnection(config)
+	// db
+	db.StartDbConnection(cfg.GetDBConfig())
 	defer db.CloseDbConnection()
+
+	// redis
+	redis.StartRedisConnection(cfg.GetRedisConfig())
+	defer redis.CloseRedisConnection()
 
 	// logger
 	logger.InitLogger()
@@ -42,16 +43,20 @@ func Run() {
 	roomRep := repository.NewRoomRepository(db.GetDBConn())
 	memberRep := repository.NewMemberRepository(db.GetDBConn())
 	msgRep := repository.NewMessageRepository(db.GetDBConn())
-	userSvc := service.NewUserService(userRep)
+	tokenCacheRep := repository.NewTokenCacheRepository(redis.GetRedisConn())
+	userCacheRep := repository.NewUserCacheRepository(redis.GetRedisConn())
+
+	userSvc := service.NewUserService(userRep, userCacheRep)
 	roomSvc := service.NewRoomService(roomRep, memberRep)
-	authSvc := service.NewAuthService(userSvc)
+	tokenSvc := service.NewTokenService(cfg.GetTSConfig(), tokenCacheRep)
+	authSvc := service.NewAuthService(userSvc, tokenSvc)
 	messageSvc := service.NewMessageService(msgRep)
 
-	authHandler := handlers.NewAuthHandler(userSvc, authSvc, logger.GetLogger())
+	authHandler := handlers.NewAuthHandler(userSvc, authSvc, tokenSvc, logger.GetLogger())
 	roomHandler := handlers.NewRoomHandler(roomSvc, logger.GetLogger())
 	chatHandler := handlers.NewChatHandler(messageSvc, logger.GetLogger())
 	router := route.NewRouter(authHandler, roomHandler, chatHandler)
-	httpPort := viper.GetString("port")
+	httpPort := cfg.GetServerPort()
 
 	srv := new(server.Server)
 	go func() {
@@ -71,10 +76,4 @@ func Run() {
 	if err := srv.Shutdown(context.Background()); err != nil {
 		log.Fatalf("error occurred on server shutting down: %s", err.Error())
 	}
-}
-
-func initConfig() error {
-	viper.AddConfigPath("config")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
 }

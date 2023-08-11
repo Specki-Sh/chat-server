@@ -1,8 +1,26 @@
-port: "8000"
+server:
+  port: 8000
 
 db:
   username: "postgres"
+  password: "password"
   host: "localhost"
-  port: "5432"
+  port: 5432
   dbname: "newdb"
   sslmode: "disable"
+
+redis:
+  host: "localhost"
+  port: 6379
+  password: ""
+  db: 0
+
+token:
+  access_keys:
+    public_key_path: "./.env/access_token_key.pub"
+    private_key_path: "./.env/access_token_key"
+  refresh_keys:
+    public_key_path: "./.env/refresh_token_key.pub"
+    private_key_path: "./.env/refresh_token_key"
+  access_expiration: 24h
+  refresh_expiration: 720h
