@@ -10,10 +10,6 @@ import (
 	"golang.org/x/net/context"
 
 	"chat-server/config"
-	"chat-server/internal/handlers"
-	"chat-server/internal/repository"
-	"chat-server/internal/route"
-	"chat-server/internal/service"
 	"chat-server/pkg/db"
 	"chat-server/pkg/logger"
 	"chat-server/pkg/redis"
@@ -39,23 +35,7 @@ func Run() {
 	logger.InitLogger()
 	defer logger.CloseLoggerFile()
 
-	userRep := repository.NewUserRepository(db.GetDBConn())
-	roomRep := repository.NewRoomRepository(db.GetDBConn())
-	memberRep := repository.NewMemberRepository(db.GetDBConn())
-	msgRep := repository.NewMessageRepository(db.GetDBConn())
-	tokenCacheRep := repository.NewTokenCacheRepository(redis.GetRedisConn())
-	userCacheRep := repository.NewUserCacheRepository(redis.GetRedisConn())
-
-	userSvc := service.NewUserService(userRep, userCacheRep)
-	roomSvc := service.NewRoomService(roomRep, memberRep)
-	tokenSvc := service.NewTokenService(cfg.GetTSConfig(), tokenCacheRep)
-	authSvc := service.NewAuthService(userSvc, tokenSvc)
-	messageSvc := service.NewMessageService(msgRep)
-
-	authHandler := handlers.NewAuthHandler(userSvc, authSvc, tokenSvc, logger.GetLogger())
-	roomHandler := handlers.NewRoomHandler(roomSvc, logger.GetLogger())
-	chatHandler := handlers.NewChatHandler(messageSvc, logger.GetLogger())
-	router := route.NewRouter(authHandler, roomHandler, chatHandler)
+	router := RouterFactory(logger.GetLogger(), db.GetDBConn(), redis.GetRedisConn(), cfg)
 	httpPort := cfg.GetServerPort()
 
 	srv := new(server.Server)
