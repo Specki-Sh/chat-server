@@ -36,11 +36,10 @@ func Run() {
 	defer logger.CloseLoggerFile()
 
 	router := RouterFactory(logger.GetLogger(), db.GetDBConn(), redis.GetRedisConn(), cfg)
-	httpPort := cfg.GetServerPort()
+	srv := server.NewServer(cfg.GetServerConfig(), router.SetupRouter())
 
-	srv := new(server.Server)
 	go func() {
-		if err := srv.Run(httpPort, router.SetupRouter()); err != nil {
+		if err := srv.Run(); err != nil {
 			log.Fatalf("Error occured while running http server: %s", err.Error())
 			return
 		}

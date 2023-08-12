@@ -1,5 +1,9 @@
 server:
+  host: "localhoost"
   port: 8000
+  max_header_bytes: 1048576
+  read_timeout: 10s
+  write_timeout: 10s
 
 db:
   username: "postgres"

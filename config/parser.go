@@ -14,11 +14,16 @@ import (
 	"chat-server/internal/service"
 	"chat-server/pkg/db"
 	"chat-server/pkg/redis"
+	"chat-server/pkg/server"
 )
 
 type Config struct {
 	Server struct {
-		Port int `mapstructure:"port"`
+		Host           string        `mapstructure:"host"`
+		Port           int           `mapstructure:"port"`
+		MaxHeaderBytes int           `mapstructure:"max_header_bytes"`
+		ReadTimeout    time.Duration `mapstructure:"read_timeout"`
+		WriteTimeout   time.Duration `mapstructure:"write_timeout"`
 	} `mapstructure:"server"`
 	DB struct {
 		Username string `mapstructure:"username"`
@@ -88,8 +93,13 @@ func (c *Config) Parse() error {
 	return nil
 }
 
-func (c *Config) GetServerPort() string {
-	return strconv.Itoa(c.Server.Port)
+func (c *Config) GetServerConfig() *server.Config {
+	return &server.Config{
+		Addr:           fmt.Sprintf("%s:%d", c.Server.Host, c.Server.Port),
+		MaxHeaderBytes: c.Server.MaxHeaderBytes,
+		ReadTimeout:    c.Server.ReadTimeout,
+		WriteTimeout:   c.Server.WriteTimeout,
+	}
 }
 
 func (c *Config) GetDBConfig() *db.Config {
