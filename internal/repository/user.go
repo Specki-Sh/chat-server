@@ -30,13 +30,20 @@ func (u *UserRepository) CreateUser(user *entity.User) (*entity.User, error) {
 	return user, nil
 }
 
-func (u *UserRepository) SelectUserByEmailAndPassword(email entity.Email, password entity.HashPassword) (*entity.User, error) {
+func (u *UserRepository) SelectUserByEmailAndPassword(
+	email entity.Email,
+	password entity.HashPassword,
+) (*entity.User, error) {
 	var user entity.User
 	query := dml.SelectUserByEmailAndPasswordQuery
-	err := u.db.QueryRow(query, email, password).Scan(&user.ID, &user.Username, &user.Password, &user.Email)
+	err := u.db.QueryRow(query, email, password).
+		Scan(&user.ID, &user.Username, &user.Password, &user.Email)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("UserRepository.SelectUserByEmailAndPassword: %w", use_case.ErrUserNotFound)
+			return nil, fmt.Errorf(
+				"UserRepository.SelectUserByEmailAndPassword: %w",
+				use_case.ErrUserNotFound,
+			)
 		}
 		return nil, fmt.Errorf("UserRepository.SelectUserByEmailAndPassword: %w", err)
 	}

@@ -12,7 +12,10 @@ type roomService struct {
 	memberRepo use_case.MemberStorage
 }
 
-func NewRoomService(roomRepo use_case.RoomStorage, memberRepo use_case.MemberStorage) use_case.RoomUseCase {
+func NewRoomService(
+	roomRepo use_case.RoomStorage,
+	memberRepo use_case.MemberStorage,
+) use_case.RoomUseCase {
 	return &roomService{
 		roomRepo:   roomRepo,
 		memberRepo: memberRepo,

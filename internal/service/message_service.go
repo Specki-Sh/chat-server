@@ -70,7 +70,9 @@ func (m *MessageService) RemoveMessageByID(id entity.ID) error {
 	return nil
 }
 
-func (m *MessageService) GetMessageBulkPaginate(req *entity.GetMessageBulkPaginateReq) ([]entity.Message, error) {
+func (m *MessageService) GetMessageBulkPaginate(
+	req *entity.GetMessageBulkPaginateReq,
+) ([]entity.Message, error) {
 	messageBulk, err := m.repo.SelectMessageBulkPaginateReverse(req.RoomID, req.PerPage, req.Page)
 	if err != nil {
 		return nil, fmt.Errorf("MesssageService.GetMessageBulkPaginate: %w", err)

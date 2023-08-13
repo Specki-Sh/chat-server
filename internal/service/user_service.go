@@ -14,7 +14,10 @@ type userService struct {
 	userCache use_case.UserCacheStorage
 }
 
-func NewUserService(userRepo use_case.UserStorage, userCache use_case.UserCacheStorage) use_case.UserUseCase {
+func NewUserService(
+	userRepo use_case.UserStorage,
+	userCache use_case.UserCacheStorage,
+) use_case.UserUseCase {
 	return &userService{
 		userRepo:  userRepo,
 		userCache: userCache,
@@ -43,7 +46,10 @@ func (u *userService) CreateUser(req *entity.CreateUserReq) (*entity.CreateUserR
 	return res, nil
 }
 
-func (u *userService) GetByEmailAndPassword(email entity.Email, password entity.HashPassword) (*entity.User, error) {
+func (u *userService) GetByEmailAndPassword(
+	email entity.Email,
+	password entity.HashPassword,
+) (*entity.User, error) {
 	user, err := u.userRepo.SelectUserByEmailAndPassword(email, password)
 	if err != nil {
 		return nil, fmt.Errorf("userService.GetByEmailAndPassword: %w", err)
@@ -83,14 +89,21 @@ func (u *userService) EditUserProfile(req *entity.EditProfileReq) (*entity.EditP
 	return res, nil
 }
 
-func (u *userService) StoreUserData(ctx context.Context, secretCode string, userData *entity.UserData) error {
+func (u *userService) StoreUserData(
+	ctx context.Context,
+	secretCode string,
+	userData *entity.UserData,
+) error {
 	if err := u.userCache.SetUserData(ctx, secretCode, userData); err != nil {
 		return fmt.Errorf("userService.StoreUserData: %w", err)
 	}
 	return nil
 }
 
-func (u *userService) RetrieveUserData(ctx context.Context, secretCode string) (*entity.UserData, error) {
+func (u *userService) RetrieveUserData(
+	ctx context.Context,
+	secretCode string,
+) (*entity.UserData, error) {
 	userData, err := u.userCache.GetUserData(ctx, secretCode)
 	if err != nil {
 		return nil, fmt.Errorf("userService.RetrieveUserData: %w", err)

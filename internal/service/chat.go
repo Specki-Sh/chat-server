@@ -32,7 +32,12 @@ type Client struct {
 	UserID  entity.ID
 }
 
-func NewClient(conn *websocket.Conn, messageBuffSize int, roomID entity.ID, userID entity.ID) *Client {
+func NewClient(
+	conn *websocket.Conn,
+	messageBuffSize int,
+	roomID entity.ID,
+	userID entity.ID,
+) *Client {
 	return &Client{
 		Conn:    conn,
 		Message: make(chan *entity.Message, messageBuffSize),

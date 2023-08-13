@@ -43,7 +43,10 @@ func (a *authService) Logout(ctx context.Context, refreshToken string) error {
 	return nil
 }
 
-func (a *authService) RefreshTokenPair(ctx context.Context, req *entity.RefreshTokenReq) (*entity.RefreshTokenRes, error) {
+func (a *authService) RefreshTokenPair(
+	ctx context.Context,
+	req *entity.RefreshTokenReq,
+) (*entity.RefreshTokenRes, error) {
 	if err := a.tokenUseCase.ValidateRefreshToken(ctx, req.RefreshToken); err != nil {
 		return nil, fmt.Errorf("authService.RefreshTokenPair: %w", err)
 	}

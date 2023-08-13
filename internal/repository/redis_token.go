@@ -21,7 +21,12 @@ func NewTokenCacheRepository(redisClient *redis.Client) use_case.TokenStorage {
 	}
 }
 
-func (r *redisTokenRepository) SetInvalidRefreshToken(ctx context.Context, userID entity.ID, refreshToken string, expiresIn time.Duration) error {
+func (r *redisTokenRepository) SetInvalidRefreshToken(
+	ctx context.Context,
+	userID entity.ID,
+	refreshToken string,
+	expiresIn time.Duration,
+) error {
 	key := fmt.Sprintf("%s:%s", refreshToken, "invalid")
 	if err := r.redis.Set(ctx, key, userID, expiresIn).Err(); err != nil {
 		return fmt.Errorf("redisTokenRepository.SetInvalidRefreshToken: %w",
@@ -30,12 +35,21 @@ func (r *redisTokenRepository) SetInvalidRefreshToken(ctx context.Context, userI
 	return nil
 }
 
-func (r *redisTokenRepository) InvalidRefreshTokenExists(ctx context.Context, refreshToken string) (bool, error) {
+func (r *redisTokenRepository) InvalidRefreshTokenExists(
+	ctx context.Context,
+	refreshToken string,
+) (bool, error) {
 	key := fmt.Sprintf("%s:%s", refreshToken, "invalid")
 	result, err := r.redis.Exists(ctx, key).Result()
 	if err != nil {
-		return false, fmt.Errorf("redisTokenRepository.SetInvalidRefreshToken: %w",
-			fmt.Errorf("could not check if refresh token exists in redis for refreshToken: %s: %w", refreshToken, err))
+		return false, fmt.Errorf(
+			"redisTokenRepository.SetInvalidRefreshToken: %w",
+			fmt.Errorf(
+				"could not check if refresh token exists in redis for refreshToken: %s: %w",
+				refreshToken,
+				err,
+			),
+		)
 	}
 	return result == 1, nil
 }

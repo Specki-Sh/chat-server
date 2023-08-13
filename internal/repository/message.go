@@ -20,7 +20,8 @@ func NewMessageRepository(db *sql.DB) *MessageRepository {
 
 func (m *MessageRepository) InsertMessage(message *entity.Message) (*entity.Message, error) {
 	query := dml.InsertMessageQuery
-	err := m.db.QueryRow(query, message.SenderID, message.RoomID, message.Content).Scan(&message.ID, &message.CreatedAt)
+	err := m.db.QueryRow(query, message.SenderID, message.RoomID, message.Content).
+		Scan(&message.ID, &message.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("MessageRepository.InsertMessage: %w", err)
 	}
@@ -40,7 +41,14 @@ func (m *MessageRepository) SelectMessage(id entity.ID) (*entity.Message, error)
 
 func (m *MessageRepository) UpdateMessage(message *entity.Message) error {
 	query := dml.UpdateMessageQuery
-	_, err := m.db.Exec(query, message.SenderID, message.RoomID, message.Content, message.Status, message.ID)
+	_, err := m.db.Exec(
+		query,
+		message.SenderID,
+		message.RoomID,
+		message.Content,
+		message.Status,
+		message.ID,
+	)
 	if err != nil {
 		return fmt.Errorf("MessageRepository.UpdateMessage: %w", err)
 	}
@@ -65,7 +73,11 @@ func (m *MessageRepository) SoftDeleteMessageBulkByRoomID(roomID entity.ID) erro
 	return nil
 }
 
-func (m *MessageRepository) SelectMessageBulkPaginate(roomID entity.ID, perPage uint, page uint) ([]entity.Message, error) {
+func (m *MessageRepository) SelectMessageBulkPaginate(
+	roomID entity.ID,
+	perPage uint,
+	page uint,
+) ([]entity.Message, error) {
 	var messages []entity.Message
 	offset := perPage * (page - 1)
 	query := dml.SelectMessageBulkPaginateQuery
@@ -90,7 +102,11 @@ func (m *MessageRepository) SelectMessageBulkPaginate(roomID entity.ID, perPage 
 	return messages, nil
 }
 
-func (m *MessageRepository) SelectMessageBulkPaginateReverse(roomID entity.ID, perPage uint, page uint) ([]entity.Message, error) {
+func (m *MessageRepository) SelectMessageBulkPaginateReverse(
+	roomID entity.ID,
+	perPage uint,
+	page uint,
+) ([]entity.Message, error) {
 	var messages []entity.Message
 	offset := (page - 1) * perPage
 	query := dml.SelectMessageBulkPaginateReverseQuery

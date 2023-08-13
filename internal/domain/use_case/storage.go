@@ -17,7 +17,10 @@ var (
 
 type UserStorage interface {
 	CreateUser(user *entity.User) (*entity.User, error)
-	SelectUserByEmailAndPassword(email entity.Email, password entity.HashPassword) (*entity.User, error)
+	SelectUserByEmailAndPassword(
+		email entity.Email,
+		password entity.HashPassword,
+	) (*entity.User, error)
 	SelectUserByID(id entity.ID) (*entity.User, error)
 	UpdateUser(user *entity.User) (*entity.User, error)
 }
@@ -43,7 +46,11 @@ type MessageStorage interface {
 	SoftDeleteMessageBulkByRoomID(roomID entity.ID) error
 
 	SelectMessageBulkPaginate(roomID entity.ID, perPage uint, page uint) ([]entity.Message, error)
-	SelectMessageBulkPaginateReverse(roomID entity.ID, perPage uint, page uint) ([]entity.Message, error)
+	SelectMessageBulkPaginateReverse(
+		roomID entity.ID,
+		perPage uint,
+		page uint,
+	) ([]entity.Message, error)
 }
 
 type MemberStorage interface {
@@ -54,6 +61,11 @@ type MemberStorage interface {
 }
 
 type TokenStorage interface {
-	SetInvalidRefreshToken(ctx context.Context, userID entity.ID, refreshToken string, expiresIn time.Duration) error
+	SetInvalidRefreshToken(
+		ctx context.Context,
+		userID entity.ID,
+		refreshToken string,
+		expiresIn time.Duration,
+	) error
 	InvalidRefreshTokenExists(ctx context.Context, refreshToken string) (bool, error)
 }
