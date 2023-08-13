@@ -1,8 +1,9 @@
 package logger
 
 import (
-	"github.com/sirupsen/logrus"
 	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 var logger *logrus.Logger
@@ -29,30 +30,39 @@ func (hook *fileHook) Levels() []logrus.Level {
 func InitLogger() {
 	logger = logrus.New()
 
-	infoFile, err := os.OpenFile("pkg/logger/logs/info.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	debugFile, err := os.OpenFile(
+		"pkg/logger/logs/debug.log",
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND,
+		0666,
+	)
 	if err != nil {
-		logrus.Fatalf("Failed to open info log file: %v", err)
+		logrus.Fatalf("Failed to open debug log file: %v", err)
 	}
 
-	errorFile, err := os.OpenFile("pkg/logger/logs/error.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	fatalFile, err := os.OpenFile(
+		"pkg/logger/logs/fatal.log",
+		os.O_CREATE|os.O_WRONLY|os.O_APPEND,
+		0666,
+	)
 	if err != nil {
-		logrus.Fatalf("Failed to open error log file: %v", err)
+		logrus.Fatalf("Failed to open fatal log file: %v", err)
 	}
 
 	logger.AddHook(&fileHook{
 		LevelsArr: []logrus.Level{
-			logrus.ErrorLevel,
-			logrus.InfoLevel,
+			logrus.FatalLevel,
+			logrus.DebugLevel,
 		},
 		Files: map[logrus.Level]*os.File{
-			logrus.ErrorLevel: errorFile,
-			logrus.InfoLevel:  infoFile,
+			logrus.FatalLevel: fatalFile,
+			logrus.DebugLevel: debugFile,
 		},
 	})
+	logger.SetLevel(logrus.DebugLevel)
 }
 
 func CloseLoggerFile() {
-	fileHook, ok := logger.Hooks[logrus.ErrorLevel][0].(*fileHook)
+	fileHook, ok := logger.Hooks[logrus.FatalLevel][0].(*fileHook)
 	if ok {
 		for _, file := range fileHook.Files {
 			err := file.Close()

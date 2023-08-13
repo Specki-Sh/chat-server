@@ -1,61 +1,49 @@
 package app
 
 import (
-	"chat-server/internal/handlers"
-	"chat-server/internal/repository"
-	"chat-server/internal/route"
-	"chat-server/internal/service"
-	"chat-server/pkg/db"
-	"chat-server/pkg/logger"
-	"chat-server/pkg/server"
 	"fmt"
-	"golang.org/x/net/context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
-	"github.com/spf13/viper"
+	"golang.org/x/net/context"
+
+	"chat-server/config"
+	"chat-server/pkg/db"
+	"chat-server/pkg/logger"
+	"chat-server/pkg/redis"
+	"chat-server/pkg/server"
 )
 
 func Run() {
-	// yaml
-	if err := initConfig(); err != nil {
-		log.Fatalf("Error occured while init viper configs: %s", err.Error())
-		return
-	}
-	var config db.Config
-	if err := viper.UnmarshalKey("db", &config); err != nil {
-		log.Fatalf("Error unmarshaling configs: %s", err)
-	}
-	config.Password = os.Getenv("DB_PASSWORD")
-
-	db.StartDbConnection(config)
-	defer db.CloseDbConnection()
-
 	// logger
 	logger.InitLogger()
 	defer logger.CloseLoggerFile()
+	logMng := logger.GetLogger()
+	debugLog := logger.DebugWriter{Logger: logMng}
+	log.SetOutput(&debugLog)
 
-	userRep := repository.NewUserRepository(db.GetDBConn())
-	roomRep := repository.NewRoomRepository(db.GetDBConn())
-	memberRep := repository.NewMemberRepository(db.GetDBConn())
-	msgRep := repository.NewMessageRepository(db.GetDBConn())
-	userSvc := service.NewUserService(userRep)
-	roomSvc := service.NewRoomService(roomRep, memberRep)
-	authSvc := service.NewAuthService(userSvc)
-	messageSvc := service.NewMessageService(msgRep)
+	// yaml
+	cfg := config.Config{}
+	if err := cfg.Parse(); err != nil {
+		logMng.Fatalf("Error while parsing yml file: %v", err)
+		return
+	}
+	// db
+	db.StartDbConnection(cfg.GetDBConfig())
+	defer db.CloseDbConnection()
 
-	authHandler := handlers.NewAuthHandler(userSvc, authSvc, logger.GetLogger())
-	roomHandler := handlers.NewRoomHandler(roomSvc, logger.GetLogger())
-	chatHandler := handlers.NewChatHandler(messageSvc, logger.GetLogger())
-	router := route.NewRouter(authHandler, roomHandler, chatHandler)
-	httpPort := viper.GetString("port")
+	// redis
+	redis.StartRedisConnection(cfg.GetRedisConfig())
+	defer redis.CloseRedisConnection()
 
-	srv := new(server.Server)
+	router := RouterFactory(logger.GetLogger(), db.GetDBConn(), redis.GetRedisConn(), cfg)
+	srv := server.NewServer(cfg.GetServerConfig(), router.SetupRouter())
+
 	go func() {
-		if err := srv.Run(httpPort, router.SetupRouter()); err != nil {
-			log.Fatalf("Error occured while running http server: %s", err.Error())
+		if err := srv.Run(); err != nil {
+			logMng.Fatalf("Error occured while running http server: %s", err.Error())
 			return
 		}
 	}()
@@ -68,12 +56,6 @@ func Run() {
 
 	fmt.Println("Shutting down")
 	if err := srv.Shutdown(context.Background()); err != nil {
-		log.Fatalf("error occurred on server shutting down: %s", err.Error())
+		logMng.Fatalf("error occurred on server shutting down: %s", err.Error())
 	}
-}
-
-func initConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
 }

@@ -10,8 +10,8 @@ type MessageUseCase interface {
 	EditMessageContent(req *entity.EditMessageReq) (*entity.Message, error)
 	MarkReadMessageStatusByID(id entity.ID) error
 	RemoveMessageByID(id entity.ID) error
-	RemoveMessagesByRoomID(roomID entity.ID) error
+	RemoveMessageBulkByRoomID(roomID entity.ID) error
 
-	GetMessagesPaginate(req *entity.GetMessagesPaginateReq) ([]*entity.Message, error)
+	GetMessageBulkPaginate(req *entity.GetMessageBulkPaginateReq) ([]entity.Message, error)
 	IsMessageOwner(userID entity.ID, messageID entity.ID) (bool, error)
 }

@@ -1,10 +1,16 @@
 package use_case
 
 import (
+	"context"
+
 	"chat-server/internal/domain/entity"
 )
 
 type AuthUseCase interface {
-	GenerateToken(req *entity.SignInReq) (*entity.SignInRes, error)
-	ParseToken(accessToken entity.NonEmptyString) (entity.ID, entity.NonEmptyString, error)
+	Authenticate(req *entity.SignInReq) (*entity.SignInRes, error)
+	Logout(ctx context.Context, refreshToken string) error
+	RefreshTokenPair(
+		ctx context.Context,
+		req *entity.RefreshTokenReq,
+	) (*entity.RefreshTokenRes, error)
 }

@@ -1,78 +1,62 @@
 package service
 
 import (
+	"context"
+	"fmt"
+
 	"chat-server/internal/domain/entity"
 	u "chat-server/internal/domain/use_case"
 	"chat-server/utils"
-	"errors"
-	"time"
-
-	"github.com/golang-jwt/jwt"
 )
 
-const (
-	tokenTTL   = 12 * time.Hour
-	signingKey = "signingKey12345"
-)
-
-type tokenClaims struct {
-	jwt.StandardClaims
-	ID       entity.ID             `json:"user_id"`
-	UserName entity.NonEmptyString `json:"user_name"`
+func NewAuthService(userUseCase u.UserUseCase, tokenUseCase u.TokenUseCase) u.AuthUseCase {
+	return &authService{
+		userUseCase:  userUseCase,
+		tokenUseCase: tokenUseCase,
+	}
 }
 
-func NewAuthService(userUseCase u.UserUseCase) *AuthService {
-	return &AuthService{userUseCase: userUseCase}
+type authService struct {
+	userUseCase  u.UserUseCase
+	tokenUseCase u.TokenUseCase
 }
 
-type AuthService struct {
-	userUseCase u.UserUseCase
-}
-
-func (a *AuthService) GenerateToken(req *entity.SignInReq) (*entity.SignInRes, error) {
-	password := utils.HashPassword(req.Password)
-	user, err := a.userUseCase.GetByEmailAndPassword(req.Email, password)
+func (a *authService) Authenticate(req *entity.SignInReq) (*entity.SignInRes, error) {
+	hashPassword := utils.HashPassword(req.Password)
+	user, err := a.userUseCase.GetByEmailAndPassword(req.Email, hashPassword)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("authService.Authenticate: %w", err)
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &tokenClaims{
-		jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(tokenTTL).Unix(),
-			IssuedAt:  time.Now().Unix(),
-		},
-		user.ID,
-		user.Username,
-	})
-
-	ss, err := token.SignedString([]byte(signingKey))
+	tokenPair, err := a.tokenUseCase.GenerateTokenPair(user)
 	if err != nil {
-		return &entity.SignInRes{}, err
+		return nil, fmt.Errorf("authService.Authenticate: %w", err)
 	}
 
-	return &entity.SignInRes{AccessToken: entity.NonEmptyString(ss), ID: user.ID, Username: user.Username}, nil
+	return &entity.SignInRes{TokenPair: *tokenPair, ID: user.ID, Username: user.Username}, nil
 }
 
-func (a *AuthService) ParseToken(accessToken entity.NonEmptyString) (entity.ID, entity.NonEmptyString, error) {
-	token, err := jwt.ParseWithClaims(string(accessToken), &tokenClaims{}, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("invalid signing method")
-		}
+func (a *authService) Logout(ctx context.Context, refreshToken string) error {
+	if err := a.tokenUseCase.InvalidateRefreshToken(ctx, refreshToken); err != nil {
+		return fmt.Errorf("authService.Authenticate: %w", err)
+	}
+	return nil
+}
 
-		return []byte(signingKey), nil
-	})
+func (a *authService) RefreshTokenPair(
+	ctx context.Context,
+	req *entity.RefreshTokenReq,
+) (*entity.RefreshTokenRes, error) {
+	if err := a.tokenUseCase.ValidateRefreshToken(ctx, req.RefreshToken); err != nil {
+		return nil, fmt.Errorf("authService.RefreshTokenPair: %w", err)
+	}
+
+	accessToken, err := a.tokenUseCase.GenerateAccessToken(req.ID, req.Username)
 	if err != nil {
-		return 0, "", err
+		return nil, fmt.Errorf("authService.RefreshTokenPair: %w", err)
 	}
 
-	claims, ok := token.Claims.(*tokenClaims)
-	if !ok {
-		return 0, "", errors.New("token claims are not of type *tokenClaims")
-	}
+	tokenPair := entity.TokenPair{RefreshToken: req.RefreshToken, AccessToken: accessToken}
 
-	if time.Now().Unix() > claims.ExpiresAt {
-		return 0, "", errors.New("token expired")
-	}
-
-	return claims.ID, claims.UserName, nil
+	return &entity.RefreshTokenRes{TokenPair: tokenPair, ID: req.ID, Username: req.Username}, nil
 }

@@ -1,8 +1,9 @@
 package route
 
 import (
-	"chat-server/internal/handlers"
 	"github.com/gin-gonic/gin"
+
+	"chat-server/internal/handlers"
 )
 
 type Router struct {
@@ -12,7 +13,11 @@ type Router struct {
 	chatHandler *handlers.ChatHandler
 }
 
-func NewRouter(authHandler *handlers.AuthHandler, roomHandler *handlers.RoomHandler, chatHandler *handlers.ChatHandler) *Router {
+func NewRouter(
+	authHandler *handlers.AuthHandler,
+	roomHandler *handlers.RoomHandler,
+	chatHandler *handlers.ChatHandler,
+) *Router {
 	return &Router{
 		route:       gin.New(),
 		authHandler: authHandler,
@@ -66,9 +71,9 @@ func (r *Router) SetupRouter() *gin.Engine {
 
 	// chat
 	r.route.GET("/chat/joinRoom/:id",
-		//r.authHandler.UserIdentity,
+		r.authHandler.UserIdentityByQueryParam("access_token"),
 		r.roomHandler.RoomExistsMiddlewareByParam("id"),
-		//r.roomHandler.RoomAccessMiddleware,
+		r.roomHandler.RoomAccessMiddlewareByParam("id"),
 		r.chatHandler.JoinRoom,
 	)
 
@@ -77,8 +82,8 @@ func (r *Router) SetupRouter() *gin.Engine {
 	messages.GET("/paginate/rooms/:roomID",
 		r.authHandler.UserIdentity,
 		r.roomHandler.RoomExistsMiddlewareByParam("roomID"),
-		r.roomHandler.RoomAccessMiddleware,
-		r.chatHandler.GetMessagesPaginate,
+		r.roomHandler.RoomAccessMiddlewareByParam("roomID"),
+		r.chatHandler.GetMessageBulkPaginate,
 	)
 	messages.PATCH("/:id",
 		r.authHandler.UserIdentity,

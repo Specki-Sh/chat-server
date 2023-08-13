@@ -1,11 +1,13 @@
 package service
 
 import (
-	"chat-server/internal/domain/entity"
 	"context"
 	"encoding/json"
 	"io"
+
 	"nhooyr.io/websocket"
+
+	"chat-server/internal/domain/entity"
 )
 
 type Chat struct {
@@ -30,7 +32,12 @@ type Client struct {
 	UserID  entity.ID
 }
 
-func NewClient(conn *websocket.Conn, messageBuffSize int, roomID entity.ID, userID entity.ID) *Client {
+func NewClient(
+	conn *websocket.Conn,
+	messageBuffSize int,
+	roomID entity.ID,
+	userID entity.ID,
+) *Client {
 	return &Client{
 		Conn:    conn,
 		Message: make(chan *entity.Message, messageBuffSize),

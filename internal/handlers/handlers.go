@@ -1,9 +1,11 @@
 package handlers
 
 import (
-	"chat-server/internal/domain/entity"
 	"errors"
+
 	"github.com/gin-gonic/gin"
+
+	"chat-server/internal/domain/entity"
 )
 
 func getUserID(c *gin.Context) (entity.ID, error) {
