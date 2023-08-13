@@ -17,10 +17,17 @@ import (
 )
 
 func Run() {
+	// logger
+	logger.InitLogger()
+	defer logger.CloseLoggerFile()
+	logMng := logger.GetLogger()
+	debugLog := logger.DebugWriter{Logger: logMng}
+	log.SetOutput(&debugLog)
+
 	// yaml
 	cfg := config.Config{}
 	if err := cfg.Parse(); err != nil {
-		log.Fatalf("Error while parsing yml file: %v", err)
+		logMng.Fatalf("Error while parsing yml file: %v", err)
 		return
 	}
 	// db
@@ -31,16 +38,12 @@ func Run() {
 	redis.StartRedisConnection(cfg.GetRedisConfig())
 	defer redis.CloseRedisConnection()
 
-	// logger
-	logger.InitLogger()
-	defer logger.CloseLoggerFile()
-
 	router := RouterFactory(logger.GetLogger(), db.GetDBConn(), redis.GetRedisConn(), cfg)
 	srv := server.NewServer(cfg.GetServerConfig(), router.SetupRouter())
 
 	go func() {
 		if err := srv.Run(); err != nil {
-			log.Fatalf("Error occured while running http server: %s", err.Error())
+			logMng.Fatalf("Error occured while running http server: %s", err.Error())
 			return
 		}
 	}()
@@ -53,6 +56,6 @@ func Run() {
 
 	fmt.Println("Shutting down")
 	if err := srv.Shutdown(context.Background()); err != nil {
-		log.Fatalf("error occurred on server shutting down: %s", err.Error())
+		logMng.Fatalf("error occurred on server shutting down: %s", err.Error())
 	}
 }
