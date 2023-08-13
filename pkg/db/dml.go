@@ -10,7 +10,7 @@ const (
 
 // Member queries
 const (
-	InsertMemberQuery             = `INSERT INTO members (room_id, user_id) VALUES ($1, $2)`
+	InsertMemberQuery             = ` INSERT INTO members (room_id, user_id) VALUES ($1, $2) ON CONFLICT (room_id, user_id) DO NOTHING`
 	SelectMemberBulkByRoomIDQuery = `SELECT room_id, user_id FROM members WHERE room_id = $1`
 	UpdateMemberQuery             = `UPDATE members SET room_id = $1, user_id = $2 WHERE room_id = $3 AND user_id = $4`
 	DeleteMemberQuery             = `DELETE FROM members WHERE room_id = $1 AND user_id = $2`
