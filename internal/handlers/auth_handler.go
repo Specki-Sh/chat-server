@@ -26,7 +26,12 @@ type AuthHandler struct {
 	logger *logrus.Logger
 }
 
-func NewAuthHandler(uus use_case.UserUseCase, aus use_case.AuthUseCase, tus use_case.TokenUseCase, logger *logrus.Logger) *AuthHandler {
+func NewAuthHandler(
+	uus use_case.UserUseCase,
+	aus use_case.AuthUseCase,
+	tus use_case.TokenUseCase,
+	logger *logrus.Logger,
+) *AuthHandler {
 	return &AuthHandler{
 		userUseCase:  uus,
 		authUseCase:  aus,
@@ -161,6 +166,27 @@ func (a *AuthHandler) UserIdentity(c *gin.Context) {
 	a.logger.Infof("user identity set: %d %s", userID, username)
 }
 
+func (a *AuthHandler) UserIdentityByQueryParam(query string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.Query(query)
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"reason": "empty access token"})
+			return
+		}
+
+		userID, username, err := a.tokenUseCase.ParseAccessToken(token)
+		if err != nil {
+			a.logger.Errorf("error parsing token: %v", err)
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.Set(userCtx, userID)
+		c.Set(usernameCtx, username)
+		a.logger.Infof("user identity set: %d %s", userID, username)
+	}
+}
+
 func (a *AuthHandler) UserPermissionMiddlewareByParam(paramKey string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userIDInt, err := strconv.Atoi(c.Param(paramKey))
@@ -179,7 +205,11 @@ func (a *AuthHandler) UserPermissionMiddlewareByParam(paramKey string) gin.Handl
 		}
 
 		if userID != userTokenID {
-			a.logger.Infof("User with ID: %v has not permission of user with ID: %v", userTokenID, userID)
+			a.logger.Infof(
+				"User with ID: %v has not permission of user with ID: %v",
+				userTokenID,
+				userID,
+			)
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "access denied"})
 			return
 		}
