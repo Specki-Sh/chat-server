@@ -1,5 +1,5 @@
 server:
-  host: "localhoost"
+  host: "localhost"
   port: 8000
   max_header_bytes: 1048576
   read_timeout: 10s
@@ -21,10 +21,10 @@ redis:
 
 token:
   access_keys:
-    public_key_path: "./.env/access_token_key.pub"
-    private_key_path: "./.env/access_token_key"
+    public_key_path: "./config/.env/access_token_key.pub"
+    private_key_path: "./config/.env/access_token_key"
   refresh_keys:
-    public_key_path: "./.env/refresh_token_key.pub"
-    private_key_path: "./.env/refresh_token_key"
+    public_key_path: "./config/.env/refresh_token_key.pub"
+    private_key_path: "./config/.env/refresh_token_key"
   access_expiration: 24h
   refresh_expiration: 720h

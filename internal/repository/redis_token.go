@@ -15,7 +15,7 @@ type redisTokenRepository struct {
 	redis *redis.Client
 }
 
-func NewTokenRepository(redisClient *redis.Client) use_case.TokenStorage {
+func NewTokenCacheRepository(redisClient *redis.Client) use_case.TokenStorage {
 	return &redisTokenRepository{
 		redis: redisClient,
 	}

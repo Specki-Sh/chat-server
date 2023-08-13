@@ -67,7 +67,7 @@ func (ch *ChatHandler) getRoomIDAndUserIDParams(c *gin.Context) (entity.ID, enti
 		return 0, 0, fmt.Errorf("error converting roomID to int: %w", err)
 	}
 
-	userIDInt, err := strconv.Atoi(c.Query("userID"))
+	userIDInt, err := getUserID(c)
 	if err != nil {
 		return 0, 0, fmt.Errorf("error converting userID to int: %w", err)
 	}
@@ -83,7 +83,11 @@ func (ch *ChatHandler) acceptWebSocket(c *gin.Context) (*websocket.Conn, error) 
 	return conn, nil
 }
 
-func (ch *ChatHandler) createClient(conn *websocket.Conn, roomID entity.ID, userID entity.ID) *service.Client {
+func (ch *ChatHandler) createClient(
+	conn *websocket.Conn,
+	roomID entity.ID,
+	userID entity.ID,
+) *service.Client {
 	cl := service.NewClient(conn, ch.messageBuffSize, roomID, userID)
 	ch.addClient(roomID, cl)
 	return cl

@@ -224,32 +224,38 @@ func (r *RoomHandler) RoomPermissionsMiddleware(c *gin.Context) {
 	c.Next()
 }
 
-func (r *RoomHandler) RoomAccessMiddleware(c *gin.Context) {
-	roomIDInt, err := strconv.Atoi(c.Param("roomID"))
-	if err != nil {
-		r.logger.Errorf("Error converting room ID to int: %v", err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid room ID"})
-		return
-	}
-	roomID := entity.ID(roomIDInt)
+func (r *RoomHandler) RoomAccessMiddlewareByParam(paramKey string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		roomIDInt, err := strconv.Atoi(c.Param(paramKey))
+		if err != nil {
+			r.logger.Errorf("Error converting room ID to int: %v", err)
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid room ID"})
+			return
+		}
+		roomID := entity.ID(roomIDInt)
 
-	userID, err := getUserID(c)
-	if err != nil {
-		r.logger.Errorf("Error getting user ID: %v", err)
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+		userID, err := getUserID(c)
+		if err != nil {
+			r.logger.Errorf("Error getting user ID: %v", err)
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
 
-	hasAccess, err := r.roomUseCase.HasRoomAccess(roomID, userID)
-	if err != nil {
-		r.logger.Errorf("Error checking if user has access to room: %v", err)
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		hasAccess, err := r.roomUseCase.HasRoomAccess(roomID, userID)
+		if err != nil {
+			r.logger.Errorf("Error checking if user has access to room: %v", err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if !hasAccess {
+			r.logger.Infof(
+				"User with ID: %v does not have access to room with ID: %v",
+				userID,
+				roomID,
+			)
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "access denied"})
+			return
+		}
+		c.Next()
 	}
-	if !hasAccess {
-		r.logger.Infof("User with ID: %v does not have access to room with ID: %v", userID, roomID)
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "access denied"})
-		return
-	}
-	c.Next()
 }
