@@ -1,10 +1,10 @@
 package entity
 
 type Room struct {
-	ID      ID        `json:"id"`
-	OwnerID ID        `json:"owner_id"`
-	Name    string    `json:"name"`
-	Members []*Member `json:"members"`
+	ID      ID       `json:"id"`
+	OwnerID ID       `json:"owner_id"`
+	Name    string   `json:"name"`
+	Members []Member `json:"members"`
 }
 
 type CreateRoomReq struct {

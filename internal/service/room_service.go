@@ -49,6 +49,11 @@ func (r *roomService) GetRoomInfoByID(id entity.ID) (*entity.Room, error) {
 	if err != nil {
 		return nil, fmt.Errorf("roomService.GetRoomInfoByID: %w", err)
 	}
+	members, err := r.memberRepo.SelectMemberBulkByRoomID(id)
+	if err != nil {
+		return nil, fmt.Errorf("roomService.GetRoomInfoByID: %w", err)
+	}
+	room.Members = members
 	return room, nil
 }
 
