@@ -61,7 +61,7 @@ type Config struct {
 func (c *Config) Parse() error {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yml")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath("config")
 
 	if err := viper.ReadInConfig(); err != nil {
 		return fmt.Errorf("Config.Parse: %w", err)
@@ -142,11 +142,18 @@ func readPublicKeyFile(path string) (*rsa.PublicKey, error) {
 		return nil, fmt.Errorf("readPublicKeyFile: %w", err)
 	}
 	block, _ := pem.Decode(data)
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if block == nil {
+		return nil, fmt.Errorf("readPublicKeyFile: no PEM data found")
+	}
+	key, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("readPublicKeyFile: %w", err)
 	}
-	return pub.(*rsa.PublicKey), nil
+	pub, ok := key.(*rsa.PublicKey)
+	if !ok {
+		return nil, fmt.Errorf("readPublicKeyFile: not an RSA key")
+	}
+	return pub, nil
 }
 
 func readPrivateKeyFile(path string) (*rsa.PrivateKey, error) {
@@ -155,9 +162,16 @@ func readPrivateKeyFile(path string) (*rsa.PrivateKey, error) {
 		return nil, fmt.Errorf("readPrivateKeyFile: %w", err)
 	}
 	block, _ := pem.Decode(data)
-	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if block == nil {
+		return nil, fmt.Errorf("readPrivateKeyFile: no PEM data found")
+	}
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, fmt.Errorf("readPrivateKeyFile: %w", err)
+	}
+	priv, ok := key.(*rsa.PrivateKey)
+	if !ok {
+		return nil, fmt.Errorf("readPrivateKeyFile: not an RSA key")
 	}
 	return priv, nil
 }
