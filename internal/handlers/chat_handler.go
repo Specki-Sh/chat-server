@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"sync"
@@ -21,8 +22,6 @@ type ChatHandler struct {
 	chatsMu sync.Mutex
 	chats   map[entity.ID]*service.Chat
 
-	logger *logrus.Logger
-
 	messageBuffSize   int
 	broadcastBuffSize int
 }
@@ -30,7 +29,6 @@ type ChatHandler struct {
 func NewChatHandler(messageUseCase use_case.MessageUseCase, logger *logrus.Logger) *ChatHandler {
 	return &ChatHandler{
 		messageUseCase: messageUseCase,
-		logger:         logger,
 		chats:          make(map[entity.ID]*service.Chat),
 	}
 }
@@ -38,14 +36,14 @@ func NewChatHandler(messageUseCase use_case.MessageUseCase, logger *logrus.Logge
 func (ch *ChatHandler) JoinRoom(c *gin.Context) {
 	roomID, userID, err := ch.getRoomIDAndUserIDParams(c)
 	if err != nil {
-		ch.logger.Errorf("error getting params: %v", err)
+		log.Printf("error getting params: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	conn, err := ch.acceptWebSocket(c)
 	if err != nil {
-		ch.logger.Errorf("error accepting WebSocket connection: %v", err)
+		log.Printf("error accepting WebSocket connection: %v", err)
 		return
 	}
 	defer conn.Close(websocket.StatusInternalError, "")
@@ -56,7 +54,7 @@ func (ch *ChatHandler) JoinRoom(c *gin.Context) {
 	go cl.WriteMessage()
 	go ch.startBroadcastManager(roomID)
 
-	ch.logger.Infof("user joined room: %d %d", userID, roomID)
+	log.Printf("user joined room: %d %d", userID, roomID)
 
 	cl.ReadMessage(ch.chats[roomID].Broadcast)
 }
@@ -96,40 +94,40 @@ func (ch *ChatHandler) createClient(
 func (ch *ChatHandler) EditMessage(c *gin.Context) {
 	var req entity.EditMessageReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		ch.logger.Errorf("error binding JSON: %v", err)
+		log.Printf("error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		ch.logger.Errorf("error converting message ID to int: %v", err)
+		log.Printf("error converting message ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
 	req.ID = entity.ID(id)
 
 	if err := req.Validate(); err != nil {
-		ch.logger.Errorf("error validating request: %v", err)
+		log.Printf("error validating request: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	message, err := ch.messageUseCase.EditMessageContent(&req)
 	if err != nil {
-		ch.logger.Errorf("error editing message content: %v", err)
+		log.Printf("error editing message content: %v", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	ch.logger.Infof("message edited: %d", id)
+	log.Printf("message edited: %d", id)
 	c.JSON(http.StatusOK, message)
 }
 
 func (ch *ChatHandler) DeleteMessage(c *gin.Context) {
 	idInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		ch.logger.Errorf("error converting message ID to int: %v", err)
+		log.Printf("error converting message ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
@@ -137,18 +135,18 @@ func (ch *ChatHandler) DeleteMessage(c *gin.Context) {
 
 	err = ch.messageUseCase.RemoveMessageByID(id)
 	if err != nil {
-		ch.logger.Errorf("error removing message by ID: %v", err)
+		log.Printf("error removing message by ID: %v", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ch.logger.Infof("message deleted: %d", id)
+	log.Printf("message deleted: %d", id)
 	c.Status(http.StatusNoContent)
 }
 
 func (ch *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
 	roomIDInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		ch.logger.Errorf("error converting room ID to int: %v", err)
+		log.Printf("error converting room ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid room ID"})
 		return
 	}
@@ -156,42 +154,42 @@ func (ch *ChatHandler) DeleteAllMessageFromRoom(c *gin.Context) {
 
 	err = ch.messageUseCase.RemoveMessageBulkByRoomID(roomID)
 	if err != nil {
-		ch.logger.Errorf("error removing messages by room ID: %v", err)
+		log.Printf("error removing messages by room ID: %v", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ch.logger.Infof("all messages deleted from room: %d", roomID)
+	log.Printf("all messages deleted from room: %d", roomID)
 	c.Status(http.StatusNoContent)
 }
 
 func (ch *ChatHandler) GetMessageBulkPaginate(c *gin.Context) {
 	var req entity.GetMessageBulkPaginateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		ch.logger.Errorf("error binding JSON: %v", err)
+		log.Printf("error binding JSON: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	roomID, err := strconv.Atoi(c.Param("roomID"))
 	if err != nil {
-		ch.logger.Errorf("error converting room ID to int: %v", err)
+		log.Printf("error converting room ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Invalid message ID"})
 		return
 	}
 	req.RoomID = entity.ID(roomID)
 
 	if err := req.Validate(); err != nil {
-		ch.logger.Errorf("error validating request: %v", err)
+		log.Printf("error validating request: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	messages, err := ch.messageUseCase.GetMessageBulkPaginate(&req)
 	if err != nil {
-		ch.logger.Errorf("error getting messages paginate: %v", err)
+		log.Printf("error getting messages paginate: %v", err)
 		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	ch.logger.Infof("messages paginate retrieved: %d", roomID)
+	log.Printf("messages paginate retrieved: %d", roomID)
 	c.JSON(http.StatusOK, messages)
 }
 
@@ -199,7 +197,7 @@ func (ch *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.H
 	return func(c *gin.Context) {
 		messageIDInt, err := strconv.Atoi(c.Param(paramKey))
 		if err != nil {
-			ch.logger.Errorf("error converting message ID to int: %v", err)
+			log.Printf("error converting message ID to int: %v", err)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid message ID"})
 			return
 		}
@@ -207,25 +205,25 @@ func (ch *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.H
 
 		userID, err := getUserID(c)
 		if err != nil {
-			ch.logger.Errorf("error getting user ID: %v", err)
+			log.Printf("error getting user ID: %v", err)
 			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
 		isOwner, err := ch.messageUseCase.IsMessageOwner(userID, messageID)
 		if err != nil {
-			ch.logger.Errorf("error checking if user is message owner: %v", err)
+			log.Printf("error checking if user is message owner: %v", err)
 			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
 		if !isOwner {
-			ch.logger.Infof("access denied to message: %d %d", userID, messageID)
+			log.Printf("access denied to message: %d %d", userID, messageID)
 			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "access denied"})
 			return
 		}
 
-		ch.logger.Infof("access granted to message: %d %d", userID, messageID)
+		log.Printf("access granted to message: %d %d", userID, messageID)
 		c.Next()
 	}
 }
@@ -233,7 +231,7 @@ func (ch *ChatHandler) MessagePermissionMiddlewareByParam(paramKey string) gin.H
 func (ch *ChatHandler) BroadcastMessageUpdateMiddleware(c *gin.Context) {
 	messageIDInt, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		ch.logger.Errorf("error converting message ID to int: %v", err)
+		log.Printf("error converting message ID to int: %v", err)
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "invalid message ID"})
 		return
 	}
@@ -246,7 +244,7 @@ func (ch *ChatHandler) BroadcastMessageUpdateMiddleware(c *gin.Context) {
 
 	msg, err := ch.messageUseCase.GetMessageByID(messageID)
 	if err != nil {
-		ch.logger.Errorf("error getting message by ID: %v", err)
+		log.Printf("error getting message by ID: %v", err)
 		return
 	}
 	ch.sendMessageForAllClientInRoom(msg)
@@ -267,11 +265,11 @@ func (ch *ChatHandler) broadcastManager(broadcast chan *entity.Message) {
 			req := entity.NewCreateMessageReq(msg)
 			message, err := ch.messageUseCase.CreateMessage(req)
 			if err != nil {
-				ch.logger.Errorf("error creating message: %v", err)
+				log.Printf("error creating message: %v", err)
 				continue
 			}
 			ch.sendMessageForAllClientInRoom(message)
-			ch.logger.Infof("message broadcasted: %d", message.ID)
+			log.Printf("message broadcasted: %d", message.ID)
 		}
 	}
 }
